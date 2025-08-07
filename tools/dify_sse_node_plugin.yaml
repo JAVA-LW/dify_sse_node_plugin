@@ -198,7 +198,7 @@ output_schema:
   properties:
     status:
       type: string
-      description: "Connection status (completed, failed)"
+      description: "Connection status (completed, failed, error)"
     total_events:
       type: number
       description: "Total number of events received"
@@ -207,33 +207,28 @@ output_schema:
       description: "Connection duration in seconds"
     events:
       type: array
-      description: "Array of received SSE events"
+      description: "Array of all received SSE events"
       items:
         type: object
         properties:
           event_type:
             type: string
+            description: "SSE event type"
           data:
             type: string
+            description: "SSE event data (decoded from Unicode)"
           event_id:
             type: string
+            description: "SSE event ID"
           timestamp:
             type: string
+            description: "Event timestamp"
     summary:
       type: string
       description: "Human readable summary of the SSE session"
     error:
       type: string
       description: "Error message if connection failed"
-    method:
-      type: string
-      description: "HTTP method used for the request"
-    has_body:
-      type: boolean
-      description: "Whether the request included a body"
-    body_type:
-      type: string
-      description: "Type of request body (json, text, form, xml)"
 
 extra:
   python:
