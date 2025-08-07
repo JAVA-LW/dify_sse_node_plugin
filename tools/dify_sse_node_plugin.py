@@ -205,18 +205,6 @@ class SSEClient:
         start_time = time.time()
         event_count = 0
         
-        # 添加调试信息的事件
-        debug_event = SSEEvent("debug", json.dumps({
-            "message": "开始构建SSE请求",
-            "url": self.url,
-            "method": self.method,
-            "headers": self.headers,
-            "body_type": self.body_type,
-            "body_length": len(self.body) if self.body else 0,
-            "timeout": self.timeout
-        }, ensure_ascii=False, separators=(',', ':')), "debug-start")
-        yield debug_event
-        
         try:
             # 根据方法和body参数构建请求
             if self.method == "GET":
@@ -312,32 +300,8 @@ class SSEClient:
             # 从stream_kwargs中提取参数，避免重复传递
             method = stream_kwargs.pop("method")
             url = stream_kwargs.pop("url")
-            
-            # 添加请求构建完成的调试信息
-            debug_request_event = SSEEvent("debug", json.dumps({
-                "message": "请求参数构建完成",
-                "final_method": method,
-                "final_url": url,
-                "final_headers": dict(stream_kwargs.get("headers", {})),
-                "has_content": "content" in stream_kwargs,
-                "content_length": len(stream_kwargs.get("content", b"")) if "content" in stream_kwargs else 0,
-                "stream_kwargs_keys": list(stream_kwargs.keys()),
-                "body_preview": self.body[:500] if self.body else None,  # 增加预览长度
-                "body_full_length": len(self.body) if self.body else 0,
-                "body_type": self.body_type
-            }, ensure_ascii=False, separators=(',', ':')), "debug-request")
-            yield debug_request_event
                 
             with httpx.stream(method, url, **stream_kwargs) as response:
-                # 添加响应状态调试信息
-                debug_response_event = SSEEvent("debug", json.dumps({
-                    "message": "收到HTTP响应",
-                    "status_code": response.status_code,
-                    "response_headers": dict(response.headers),
-                    "content_type": response.headers.get("content-type", ""),
-                    "is_sse_response": "text/event-stream" in response.headers.get("content-type", "")
-                }, ensure_ascii=False, separators=(',', ':')), "debug-response")
-                yield debug_response_event
                 
                 if response.status_code != 200:
                     # 收集详细的错误信息
@@ -454,6 +418,27 @@ class SSEClient:
 
 class DifySseNodePluginTool(Tool):
     """Dify SSE请求工具"""
+    
+    def _parse_event_data(self, data: str) -> Any:
+        """尝试解析事件数据，如果是JSON格式则返回对象，否则返回原始字符串"""
+        if not data:
+            return data
+        
+        # 检查是否是JSON格式
+        data_stripped = data.strip()
+        if (data_stripped.startswith('{') and data_stripped.endswith('}')) or \
+           (data_stripped.startswith('[') and data_stripped.endswith(']')):
+            try:
+                import json as json_lib
+                parsed_data = json_lib.loads(data)
+                print(f"[数据解析] 成功解析JSON数据: {type(parsed_data)}")
+                return parsed_data
+            except json_lib.JSONDecodeError as e:
+                print(f"[数据解析] JSON解析失败: {e}, 保持原始字符串格式")
+                return data
+        else:
+            # 不是JSON格式，返回原始字符串
+            return data
     
     def _parse_headers(self, headers_str: str) -> Dict[str, str]:
         """Parse headers from JSON string format to dictionary"""
@@ -582,6 +567,7 @@ class DifySseNodePluginTool(Tool):
             connection_successful = False
             last_error = None
             retry_attempts = 3  # 固定重试次数
+            all_events = []  # 收集所有事件
             
             for attempt in range(retry_attempts + 1):
                 try:
@@ -594,28 +580,59 @@ class DifySseNodePluginTool(Tool):
                     print(f"[SSE连接] 开始连接并监听事件")
                     start_time = time.time()
                     event_count = 0
+                    
+                    # 收集所有事件到数组中
                     for event in sse_client.connect_and_listen(max_events, max_duration):
                         event_count += 1
+                        # 尝试解析data字段，如果是JSON则转换为对象
+                        parsed_data = self._parse_event_data(event.data)
+                        
                         event_info = {
                             "event_number": event_count,
                             "event_type": event.event_type,
-                            "data": event.data,
+                            "data": parsed_data,  # 使用解析后的数据
                             "event_id": event.event_id,
                             "timestamp": event.timestamp,
                             "retry": event.retry
                         }
-                        yield self.create_json_message(event_info)
+                        all_events.append(event_info)
+                        print(f"[事件收集] 收集到第{event_count}个事件: {event.event_type}, 数据类型: {type(parsed_data)}")
+                    
                     connection_successful = True
                     end_time = time.time()
                     duration = end_time - start_time
+                    
+                    # 构建最终结果对象，不包含events字段（已通过events_stream变量提供）
                     final_result = {
                         "status": "completed",
                         "total_events": event_count,
                         "connection_duration": round(duration, 2),
                         "summary": f"SSE连接成功，接收到{event_count}个事件，耗时{duration:.2f}秒"
                     }
-                    summary_message = self.create_json_message(final_result)
-                    yield summary_message
+                    
+                    # 构建文本摘要
+                    text_summary = f"SSE连接成功完成\n连接URL: {full_url}\n接收事件数: {event_count}\n连接时长: {duration:.2f}秒\n连接状态: 成功"
+                    
+                    print(f"[最终结果] 构建完成，包含{len(all_events)}个事件")
+                    
+                    # 返回JSON结果
+                    yield self.create_json_message(final_result)
+                    
+                    # 返回文本摘要
+                    yield self.create_text_message(text_summary)
+                    
+                    # 返回自定义变量 - 事件流数组
+                    yield self.create_variable_message("events_stream", all_events)
+                    
+                    # 返回自定义变量 - 连接状态
+                    yield self.create_variable_message("connection_status", "completed")
+                    
+                    # 返回自定义变量 - 事件总数
+                    yield self.create_variable_message("total_events", event_count)
+                    
+                    # 返回自定义变量 - 连接时长
+                    yield self.create_variable_message("connection_duration", round(duration, 2))
+                    
                     break
                     
                 except Exception as e:
@@ -635,13 +652,32 @@ class DifySseNodePluginTool(Tool):
                     "status": "failed",
                     "total_events": 0,
                     "connection_duration": 0,
-                    "events": [],
                     "summary": f"SSE连接失败，重试{retry_attempts + 1}次后仍无法连接",
                     "error": last_error or "未知错误"
                 }
-                error_message = self.create_json_message(final_result)
-                print(f"[出参] 输出错误结果: {error_message}")
-                yield error_message
+                
+                # 构建失败文本摘要
+                text_summary = f"SSE连接失败\n连接URL: {full_url}\n错误信息: {last_error or '未知错误'}\n重试次数: {retry_attempts + 1}\n连接状态: 失败"
+                
+                print(f"[出参] 输出错误结果")
+                
+                # 返回JSON结果
+                yield self.create_json_message(final_result)
+                
+                # 返回文本摘要
+                yield self.create_text_message(text_summary)
+                
+                # 返回自定义变量 - 空事件流
+                yield self.create_variable_message("events_stream", [])
+                
+                # 返回自定义变量 - 连接状态
+                yield self.create_variable_message("connection_status", "failed")
+                
+                # 返回自定义变量 - 事件总数
+                yield self.create_variable_message("total_events", 0)
+                
+                # 返回自定义变量 - 连接时长
+                yield self.create_variable_message("connection_duration", 0)
             
             print(f"[工具调用] DifySseNodePluginTool._invoke 执行完成")
             print("=" * 80)
@@ -654,12 +690,32 @@ class DifySseNodePluginTool(Tool):
                 "status": "error",
                 "total_events": 0,
                 "connection_duration": 0,
-                "events": [],
                 "summary": "工具执行过程中发生系统错误",
                 "error": error_msg
             }
-            error_message = self.create_json_message(final_result)
-            print(f"[出参] 输出系统错误结果: {error_message}")
-            yield error_message
+            
+            # 构建错误文本摘要
+            text_summary = f"SSE工具执行错误\n错误信息: {error_msg}\n连接状态: 错误"
+            
+            print(f"[出参] 输出系统错误结果")
+            
+            # 返回JSON结果
+            yield self.create_json_message(final_result)
+            
+            # 返回文本摘要
+            yield self.create_text_message(text_summary)
+            
+            # 返回自定义变量 - 空事件流
+            yield self.create_variable_message("events_stream", [])
+            
+            # 返回自定义变量 - 连接状态
+            yield self.create_variable_message("connection_status", "error")
+            
+            # 返回自定义变量 - 事件总数
+            yield self.create_variable_message("total_events", 0)
+            
+            # 返回自定义变量 - 连接时长
+            yield self.create_variable_message("connection_duration", 0)
+            
             print(f"[工具调用] DifySseNodePluginTool._invoke 异常结束")
             print("=" * 80)

@@ -1,6 +1,6 @@
 identity:
   name: "dify_sse_node_plugin"
-  author: "lw"
+  author: "老文"
   label:
     en_US: "SSE Request"
     zh_Hans: "SSE 请求"
@@ -193,6 +193,7 @@ parameters:
     llm_description: "Maximum duration to keep the connection alive in seconds"
     form: form
 
+# 输出变量定义 - 工作流中可引用的所有输出变量
 output_schema:
   type: object
   properties:
@@ -205,30 +206,38 @@ output_schema:
     connection_duration:
       type: number
       description: "Connection duration in seconds"
-    events:
-      type: array
-      description: "Array of all received SSE events"
-      items:
-        type: object
-        properties:
-          event_type:
-            type: string
-            description: "SSE event type"
-          data:
-            type: string
-            description: "SSE event data (decoded from Unicode)"
-          event_id:
-            type: string
-            description: "SSE event ID"
-          timestamp:
-            type: string
-            description: "Event timestamp"
     summary:
       type: string
       description: "Human readable summary of the SSE session"
     error:
       type: string
       description: "Error message if connection failed"
+    events_stream:
+      type: array
+      description: "Stream of all SSE events as an array for workflow processing"
+      items:
+        type: object
+        properties:
+          event_number:
+            type: number
+            description: "Sequential event number"
+          event_type:
+            type: string
+            description: "SSE event type"
+          data:
+            description: "SSE event data (can be string or parsed object)"
+          event_id:
+            type: string
+            description: "SSE event ID"
+          timestamp:
+            type: string
+            description: "Event timestamp"
+          retry:
+            type: number
+            description: "SSE retry value"
+    connection_status:
+      type: string
+      description: "Simple connection status (completed, failed, error)"
 
 extra:
   python:

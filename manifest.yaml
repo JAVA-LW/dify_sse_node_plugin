@@ -1,6 +1,6 @@
 version: 0.0.1
 type: plugin
-author: lw
+author: 老文
 name: dify_sse_node_plugin
 label:
   en_US: SSE Request Tool
