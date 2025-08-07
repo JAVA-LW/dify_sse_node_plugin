@@ -2,29 +2,239 @@ identity:
   name: "dify_sse_node_plugin"
   author: "lw"
   label:
-    en_US: "dify_sse_node_plugin"
-    zh_Hans: "dify_sse_node_plugin"
-    pt_BR: "dify_sse_node_plugin"
+    en_US: "SSE Request"
+    zh_Hans: "SSE 请求"
+    pt_BR: "Requisição SSE"
 description:
   human:
-    en_US: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
-    zh_Hans: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
-    pt_BR: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
-  llm: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+    en_US: "Send Server-Sent Events (SSE) requests to establish long connections and receive real-time data streams from servers."
+    zh_Hans: "发送服务器发送事件(SSE)请求，建立长连接，接收服务器实时数据流。"
+    pt_BR: "Enviar solicitações de Server-Sent Events (SSE) para estabelecer conexões longas e receber fluxos de dados em tempo real."
+  llm: "A tool for making Server-Sent Events (SSE) requests that maintains long connections to receive real-time streaming data from servers."
 parameters:
-  - name: query
+  - name: url
     type: string
     required: true
     label:
-      en_US: Query string
-      zh_Hans: 查询语句
-      pt_BR: Query string
+      en_US: "SSE Server URL"
+      zh_Hans: "SSE 服务器 URL"
+      pt_BR: "URL do Servidor SSE"
     human_description:
-      en_US: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
-      zh_Hans: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
-      pt_BR: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
-    llm_description: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+      en_US: "Enter the complete SSE server URL. Must start with http:// or https://. Examples: https://api.example.com/events, http://localhost:3000/stream. Make sure the endpoint supports Server-Sent Events."
+      zh_Hans: "输入完整的SSE服务器URL。必须以http://或https://开头。示例：https://api.example.com/events, http://localhost:3000/stream。确保端点支持服务器发送事件。"
+      pt_BR: "Digite a URL completa do servidor SSE. Deve começar com http:// ou https://. Exemplos: https://api.example.com/events, http://localhost:3000/stream. Certifique-se de que o endpoint suporte Server-Sent Events."
+    llm_description: "The complete URL of the Server-Sent Events endpoint, must start with http:// or https://"
     form: llm
+
+  - name: method
+    type: select
+    required: false
+    default: "GET"
+    label:
+      en_US: "HTTP Method"
+      zh_Hans: "HTTP 方法"
+      pt_BR: "Método HTTP"
+    human_description:
+      en_US: "Choose the HTTP method for your SSE request. GET: for simple requests without body data. POST: when you need to send data to the server. PUT/PATCH: for updating resources. DELETE: for deletion operations."
+      zh_Hans: "选择SSE请求的HTTP方法。GET：用于不需要发送数据的简单请求。POST：需要向服务器发送数据时使用。PUT/PATCH：用于更新资源。DELETE：用于删除操作。"
+      pt_BR: "Escolha o método HTTP para sua solicitação SSE. GET: para solicitações simples sem dados do corpo. POST: quando você precisa enviar dados para o servidor. PUT/PATCH: para atualizar recursos. DELETE: para operações de exclusão."
+    llm_description: "HTTP method for the SSE request"
+    form: form
+    options:
+      - value: "GET"
+        label:
+          en_US: "GET"
+          zh_Hans: "GET"
+          pt_BR: "GET"
+      - value: "POST"
+        label:
+          en_US: "POST"
+          zh_Hans: "POST"
+          pt_BR: "POST"
+      - value: "PUT"
+        label:
+          en_US: "PUT"
+          zh_Hans: "PUT"
+          pt_BR: "PUT"
+      - value: "PATCH"
+        label:
+          en_US: "PATCH"
+          zh_Hans: "PATCH"
+          pt_BR: "PATCH"
+      - value: "DELETE"
+        label:
+          en_US: "DELETE"
+          zh_Hans: "DELETE"
+          pt_BR: "DELETE"
+
+  - name: headers
+    type: string
+    required: false
+    default: '{"Content-Type": "application/json", "Accept": "text/event-stream"}'
+    label:
+      en_US: "Request Headers"
+      zh_Hans: "请求头"
+      pt_BR: "Cabeçalhos da Requisição"
+    human_description:
+      en_US: "Enter HTTP headers as a JSON object. Example: {\"Authorization\": \"Bearer your-token\", \"X-API-Key\": \"your-key\"}. Common headers: Authorization for authentication, Content-Type for request format, User-Agent for client identification."
+      zh_Hans: "以JSON对象格式输入HTTP请求头。示例：{\"Authorization\": \"Bearer your-token\", \"X-API-Key\": \"your-key\"}。常用头部：Authorization用于身份验证，Content-Type用于请求格式，User-Agent用于客户端标识。"
+      pt_BR: "Digite os cabeçalhos HTTP como um objeto JSON. Exemplo: {\"Authorization\": \"Bearer your-token\", \"X-API-Key\": \"your-key\"}. Cabeçalhos comuns: Authorization para autenticação, Content-Type para formato de solicitação, User-Agent para identificação do cliente."
+    llm_description: "HTTP headers in JSON format. Example: {\"Authorization\": \"Bearer token\", \"Content-Type\": \"application/json\"}"
+    form: llm
+
+  - name: query_params
+    type: string
+    required: false
+    default: '{}'
+    label:
+      en_US: "Query Parameters"
+      zh_Hans: "查询参数"
+      pt_BR: "Parâmetros de Consulta"
+    human_description:
+      en_US: "Enter URL query parameters as a JSON object. Example: {\"stream\": \"true\", \"topic\": \"updates\", \"limit\": \"100\"}. These will be appended to the URL as ?stream=true&topic=updates&limit=100"
+      zh_Hans: "以JSON对象格式输入URL查询参数。示例：{\"stream\": \"true\", \"topic\": \"updates\", \"limit\": \"100\"}。这些参数会被添加到URL后面，如：?stream=true&topic=updates&limit=100"
+      pt_BR: "Digite os parâmetros de consulta da URL como um objeto JSON. Exemplo: {\"stream\": \"true\", \"topic\": \"updates\", \"limit\": \"100\"}. Estes serão anexados à URL como ?stream=true&topic=updates&limit=100"
+    llm_description: "URL query parameters in JSON format. Example: {\"param1\": \"value1\", \"param2\": \"value2\"}"
+    form: llm
+
+  - name: body_type
+    type: select
+    required: false
+    default: "json"
+    label:
+      en_US: "Request Body Type"
+      zh_Hans: "请求体类型"
+      pt_BR: "Tipo do Corpo da Requisição"
+    human_description:
+      en_US: "Select the format of your request body. JSON: for structured data (most common). Text: for plain text content. Form: for form-encoded data (key=value&key2=value2). XML: for XML documents."
+      zh_Hans: "选择请求体的格式。JSON：用于结构化数据（最常用）。Text：用于纯文本内容。Form：用于表单编码数据（key=value&key2=value2）。XML：用于XML文档。"
+      pt_BR: "Selecione o formato do corpo da sua solicitação. JSON: para dados estruturados (mais comum). Text: para conteúdo de texto simples. Form: para dados codificados em formulário (key=value&key2=value2). XML: para documentos XML."
+    llm_description: "Type of request body content"
+    form: form
+    options:
+      - value: "json"
+        label:
+          en_US: "JSON"
+          zh_Hans: "JSON"
+          pt_BR: "JSON"
+      - value: "text"
+        label:
+          en_US: "text"
+          zh_Hans: "text"
+          pt_BR: "text"
+      - value: "form"
+        label:
+          en_US: "form"
+          zh_Hans: "form"
+          pt_BR: "form"
+      - value: "xml"
+        label:
+          en_US: "xml"
+          zh_Hans: "xml"
+          pt_BR: "xml"
+
+  - name: body
+    type: string
+    required: false
+    default: '{}'
+    label:
+      en_US: "Request Body"
+      zh_Hans: "请求体"
+      pt_BR: "Corpo da Requisição"
+    human_description:
+      en_US: "Enter the request body content based on the type selected above. JSON example: {\"message\": \"hello\", \"user\": \"test\"}. Text example: Hello World. Form example: username=test&password=123. XML example: <root><item>value</item></root>. Leave empty for GET requests."
+      zh_Hans: "根据上面选择的类型输入请求体内容。JSON示例：{\"message\": \"hello\", \"user\": \"test\"}。Text示例：Hello World。Form示例：username=test&password=123。XML示例：<root><item>value</item></root>。GET请求可留空。"
+      pt_BR: "Digite o conteúdo do corpo da solicitação com base no tipo selecionado acima. Exemplo JSON: {\"message\": \"hello\", \"user\": \"test\"}. Exemplo de texto: Hello World. Exemplo de formulário: username=test&password=123. Exemplo XML: <root><item>value</item></root>. Deixe vazio para solicitações GET."
+    llm_description: "Request body content. Use JSON format for json type, plain text for text type, form data for form type, XML for xml type"
+    form: llm
+
+  - name: timeout
+    type: number
+    required: false
+    default: 30
+    label:
+      en_US: "Connection Timeout (seconds)"
+      zh_Hans: "连接超时时间（秒）"
+      pt_BR: "Timeout de Conexão (segundos)"
+    human_description:
+      en_US: "Set the connection timeout in seconds. Recommended: 30s for quick responses, 60s for normal APIs, 120s+ for slow servers. If the server doesn't respond within this time, the connection will fail."
+      zh_Hans: "设置连接超时时间（秒）。建议：快速响应用30秒，普通API用60秒，慢速服务器用120秒以上。如果服务器在此时间内未响应，连接将失败。"
+      pt_BR: "Defina o tempo limite de conexão em segundos. Recomendado: 30s para respostas rápidas, 60s para APIs normais, 120s+ para servidores lentos. Se o servidor não responder dentro deste tempo, a conexão falhará."
+    llm_description: "Connection timeout in seconds"
+    form: form
+
+  - name: max_events
+    type: number
+    required: false
+    default: 100
+    label:
+      en_US: "Maximum Events"
+      zh_Hans: "最大事件数"
+      pt_BR: "Máximo de Eventos"
+    human_description:
+      en_US: "Limit the number of events to collect. Recommended: 50-100 for testing, 500+ for data collection, 1000+ for monitoring. The connection will close after reaching this limit to prevent memory overflow."
+      zh_Hans: "限制收集的事件数量。建议：测试用50-100个，数据收集用500+个，监控用1000+个。达到此限制后连接会关闭，以防止内存溢出。"
+      pt_BR: "Limite o número de eventos a coletar. Recomendado: 50-100 para testes, 500+ para coleta de dados, 1000+ para monitoramento. A conexão será fechada após atingir este limite para evitar estouro de memória."
+    llm_description: "Maximum number of events to collect"
+    form: form
+
+  - name: max_duration
+    type: number
+    required: false
+    default: 300
+    label:
+      en_US: "Maximum Duration (seconds)"
+      zh_Hans: "最大持续时间（秒）"
+      pt_BR: "Duração Máxima (segundos)"
+    human_description:
+      en_US: "Maximum duration to keep listening for events (in seconds). Recommended: 60s for quick tests, 300s (5min) for normal monitoring, 1800s (30min) for long-term data collection. The connection will automatically close after this time."
+      zh_Hans: "保持监听事件的最大持续时间（秒）。建议：快速测试用60秒，正常监控用300秒（5分钟），长期数据收集用1800秒（30分钟）。超过此时间连接会自动关闭。"
+      pt_BR: "Duração máxima para manter a escuta de eventos (em segundos). Recomendado: 60s para testes rápidos, 300s (5min) para monitoramento normal, 1800s (30min) para coleta de dados de longo prazo. A conexão será fechada automaticamente após este tempo."
+    llm_description: "Maximum duration to keep the connection alive in seconds"
+    form: form
+
+output_schema:
+  type: object
+  properties:
+    status:
+      type: string
+      description: "Connection status (completed, failed)"
+    total_events:
+      type: number
+      description: "Total number of events received"
+    connection_duration:
+      type: number
+      description: "Connection duration in seconds"
+    events:
+      type: array
+      description: "Array of received SSE events"
+      items:
+        type: object
+        properties:
+          event_type:
+            type: string
+          data:
+            type: string
+          event_id:
+            type: string
+          timestamp:
+            type: string
+    summary:
+      type: string
+      description: "Human readable summary of the SSE session"
+    error:
+      type: string
+      description: "Error message if connection failed"
+    method:
+      type: string
+      description: "HTTP method used for the request"
+    has_body:
+      type: boolean
+      description: "Whether the request included a body"
+    body_type:
+      type: string
+      description: "Type of request body (json, text, form, xml)"
+
 extra:
   python:
     source: tools/dify_sse_node_plugin.py

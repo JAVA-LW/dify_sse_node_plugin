@@ -3,15 +3,15 @@ type: plugin
 author: lw
 name: dify_sse_node_plugin
 label:
-  en_US: dify_sse_node_plugin
-  ja_JP: dify_sse_node_plugin
-  zh_Hans: dify_sse_node_plugin
-  pt_BR: dify_sse_node_plugin
+  en_US: SSE Request Tool
+  ja_JP: SSEリクエストツール
+  zh_Hans: SSE请求工具
+  pt_BR: Ferramenta de Solicitação SSE
 description:
-  en_US: Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends.
-  ja_JP: Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends.
-  zh_Hans: Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends.
-  pt_BR: Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends.
+  en_US: A Server-Sent Events (SSE) request tool for Dify workflows. Establishes long connections to receive real-time event streams from servers with support for authentication, custom headers, and automatic retry mechanisms.
+  ja_JP: DifyワークフローのためのServer-Sent Events（SSE）リクエストツール。認証、カスタムヘッダー、自動再試行メカニズムをサポートし、サーバーからリアルタイムイベントストリームを受信するための長時間接続を確立します。
+  zh_Hans: 为Dify工作流设计的Server-Sent Events（SSE）请求工具。支持建立长连接接收服务器实时事件流，具备认证、自定义头部和自动重试机制。
+  pt_BR: Uma ferramenta de solicitação Server-Sent Events (SSE) para fluxos de trabalho Dify. Estabelece conexões longas para receber fluxos de eventos em tempo real de servidores com suporte para autenticação, cabeçalhos personalizados e mecanismos de repetição automática.
 icon: icon.svg
 icon_dark: icon-dark.svg
 resource:
