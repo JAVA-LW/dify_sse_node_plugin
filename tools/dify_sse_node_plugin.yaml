@@ -1,0 +1,30 @@
+identity:
+  name: "dify_sse_node_plugin"
+  author: "lw"
+  label:
+    en_US: "dify_sse_node_plugin"
+    zh_Hans: "dify_sse_node_plugin"
+    pt_BR: "dify_sse_node_plugin"
+description:
+  human:
+    en_US: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+    zh_Hans: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+    pt_BR: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+  llm: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+parameters:
+  - name: query
+    type: string
+    required: true
+    label:
+      en_US: Query string
+      zh_Hans: 查询语句
+      pt_BR: Query string
+    human_description:
+      en_US: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+      zh_Hans: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+      pt_BR: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+    llm_description: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+    form: llm
+extra:
+  python:
+    source: tools/dify_sse_node_plugin.py
