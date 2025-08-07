@@ -1,6 +1,6 @@
 identity:
   name: "dify_sse_node_plugin"
-  author: "老文"
+  author: "lw"
   label:
     en_US: "SSE Request"
     zh_Hans: "SSE 请求"

@@ -1,5 +1,5 @@
 identity:
-  author: "老文"
+  author: "lw"
   name: "dify_sse_node_plugin"
   label:
     en_US: "dify_sse_node_plugin"
@@ -55,6 +55,7 @@ identity:
 
 tools:
   - tools/dify_sse_node_plugin.yaml
+  - tools/dify_chatflow_sse.yaml
 extra:
   python:
     source: provider/dify_sse_node_plugin.py
