@@ -10,6 +10,14 @@ from datetime import datetime
 from dify_plugin import Tool
 from dify_plugin.entities.tool import ToolInvokeMessage
 
+# 导入 logging 和自定义处理器
+import logging
+from dify_plugin.config.logger_format import plugin_logger_handler
+
+# 使用自定义处理器设置日志
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(plugin_logger_handler)
 
 class SSEEvent:
     """SSE事件数据结构"""
@@ -139,7 +147,7 @@ class SSEClient:
                     # 没有data，只有自定义字段
                     data = json_lib.dumps(all_fields, ensure_ascii=False, separators=(',', ':'))
             except Exception as e:
-                print(f"[自定义字段处理] 处理自定义字段时出错: {e}")
+                logger.debug(f"[自定义字段处理] 处理自定义字段时出错: {e}")
                 # 出错时保持原始data不变
                 pass
         
@@ -160,8 +168,8 @@ class SSEClient:
                         # 重新序列化，使用ensure_ascii=False确保中文字符正常显示
                         decoded_data = json_lib.dumps(parsed_data, ensure_ascii=False, separators=(',', ':'))
                         
-                        print(f"[Unicode解码] 原始data: {data[:100]}...")
-                        print(f"[Unicode解码] 解码后data: {decoded_data[:100]}...")
+                        logger.debug(f"[Unicode解码] 原始data: {data[:100]}...")
+                        logger.debug(f"[Unicode解码] 解码后data: {decoded_data[:100]}...")
                         
                         data = decoded_data
                         
@@ -171,11 +179,11 @@ class SSEClient:
                             # 使用encode().decode('unicode_escape')处理Unicode转义
                             if '\\u' in data:
                                 decoded_data = data.encode().decode('unicode_escape')
-                                print(f"[Unicode解码] 直接解码 - 原始: {data[:100]}...")
-                                print(f"[Unicode解码] 直接解码 - 结果: {decoded_data[:100]}...")
+                                logger.debug(f"[Unicode解码] 直接解码 - 原始: {data[:100]}...")
+                                logger.debug(f"[Unicode解码] 直接解码 - 结果: {decoded_data[:100]}...")
                                 data = decoded_data
                         except Exception as decode_error:
-                            print(f"[Unicode解码] 直接解码失败: {decode_error}")
+                            logger.debug(f"[Unicode解码] 直接解码失败: {decode_error}")
                             # 解码失败，保持原始数据
                             pass
                             
@@ -183,16 +191,16 @@ class SSEClient:
                     # 对于非JSON格式但包含Unicode转义的数据，尝试直接解码
                     try:
                         decoded_data = data.encode().decode('unicode_escape')
-                        print(f"[Unicode解码] 非JSON解码 - 原始: {data[:100]}...")
-                        print(f"[Unicode解码] 非JSON解码 - 结果: {decoded_data[:100]}...")
+                        logger.debug(f"[Unicode解码] 非JSON解码 - 原始: {data[:100]}...")
+                        logger.debug(f"[Unicode解码] 非JSON解码 - 结果: {decoded_data[:100]}...")
                         data = decoded_data
                     except Exception as decode_error:
-                        print(f"[Unicode解码] 非JSON解码失败: {decode_error}")
+                        logger.debug(f"[Unicode解码] 非JSON解码失败: {decode_error}")
                         # 解码失败，保持原始数据
                         pass
                         
             except Exception as e:
-                print(f"[Unicode解码] 处理过程中出错: {e}")
+                logger.debug(f"[Unicode解码] 处理过程中出错: {e}")
                 # 出错时保持原始数据
                 pass
             
@@ -232,8 +240,8 @@ class SSEClient:
                             import json as json_lib
                             
                             # 控制台日志：JSON处理开始
-                            print(f"[JSON处理] 开始处理JSON body，长度: {len(self.body)}")
-                            print(f"[JSON处理] 原始body前100字符: {repr(self.body[:100])}")
+                            logger.debug(f"[JSON处理] 开始处理JSON body，长度: {len(self.body)}")
+                            logger.debug(f"[JSON处理] 原始body前100字符: {repr(self.body[:100])}")
                             
                             # 第一步：清理JSON字符串中的无效字符
                             cleaned_body = self.body
@@ -256,33 +264,33 @@ class SSEClient:
                             cleaned_body = cleaned_body.replace('\u205f', ' ')  # Medium Mathematical Space
                             cleaned_body = cleaned_body.replace('\u3000', ' ')  # Ideographic Space
                             
-                            print(f"[JSON处理] 清理后body长度: {len(cleaned_body)}")
-                            print(f"[JSON处理] 清理后body前100字符: {repr(cleaned_body[:100])}")
+                            logger.debug(f"[JSON处理] 清理后body长度: {len(cleaned_body)}")
+                            logger.debug(f"[JSON处理] 清理后body前100字符: {repr(cleaned_body[:100])}")
                             
-                            # 第二步：尝试解析JSON，确保格式正确
-                            parsed_json = json_lib.loads(cleaned_body)
-                            print(f"[JSON处理] JSON解析成功，类型: {type(parsed_json)}")
+                            # 第二步：尝试解析JSON
+                            parsed_json = json.loads(cleaned_body)
+                            logger.debug(f"[JSON处理] JSON解析成功，类型: {type(parsed_json)}")
                             
-                            # 第三步：重新序列化，确保格式标准化
-                            normalized_json = json_lib.dumps(parsed_json, ensure_ascii=False, separators=(',', ':'))
-                            print(f"[JSON处理] JSON重新序列化成功，新长度: {len(normalized_json)}")
-                            print(f"[JSON处理] 序列化后前100字符: {repr(normalized_json[:100])}")
+                            # 第三步：重新序列化JSON以确保格式正确
+                            normalized_json = json.dumps(parsed_json, ensure_ascii=False, separators=(',', ':'))
+                            logger.debug(f"[JSON处理] JSON重新序列化成功，新长度: {len(normalized_json)}")
+                            logger.debug(f"[JSON处理] 序列化后前100字符: {repr(normalized_json[:100])}")
                             
-                            # 第四步：使用标准化后的JSON
-                            stream_kwargs["content"] = normalized_json.encode('utf-8')
-                            print(f"[JSON处理] 编码为UTF-8成功，最终长度: {len(stream_kwargs['content'])}")
+                            # 第四步：编码为UTF-8字节
+                            stream_kwargs['content'] = normalized_json.encode('utf-8')
+                            logger.debug(f"[JSON处理] 编码为UTF-8成功，最终长度: {len(stream_kwargs['content'])}")
                             
                         except json_lib.JSONDecodeError as e:
                             # JSON格式错误，输出详细错误信息
                             error_msg = f"Invalid JSON format in body: {e}"
-                            print(f"[JSON错误] {error_msg}")
-                            print(f"[JSON错误] 原始body错误位置附近: {repr(self.body[max(0, e.pos-20):e.pos+20])}")
-                            print(f"[JSON错误] 清理后body错误位置附近: {repr(cleaned_body[max(0, e.pos-20):e.pos+20])}")
+                            logger.debug(f"[JSON错误] {error_msg}")
+                            logger.debug(f"[JSON错误] 原始body错误位置附近: {repr(self.body[max(0, e.pos-20):e.pos+20])}")
+                            logger.debug(f"[JSON错误] 清理后body错误位置附近: {repr(cleaned_body[max(0, e.pos-20):e.pos+20])}")
                             raise ValueError(error_msg)
                         except Exception as e:
                             # 其他错误
                             error_msg = f"Unexpected error in JSON processing: {e}"
-                            print(f"[JSON错误] {error_msg}")
+                            logger.debug(f"[JSON错误] {error_msg}")
                             raise ValueError(error_msg)
                     elif self.body_type == "form":
                         if "Content-Type" not in headers:
@@ -357,10 +365,10 @@ class SSEClient:
                 for line in response.iter_lines():
                     # 检查超时和事件数量限制
                     if time.time() - start_time > max_duration:
-                        print(f"[SSE监听] 达到最大时长限制 {max_duration}秒，停止监听")
+                        logger.info(f"[SSE监听] 达到最大时长限制 {max_duration}秒，停止监听")
                         break
                     if event_count >= max_events:
-                        print(f"[SSE监听] 达到最大事件数限制 {max_events}，停止监听")
+                        logger.info(f"[SSE监听] 达到最大事件数限制 {max_events}，停止监听")
                         break
                     
                     line_count += 1
@@ -368,47 +376,47 @@ class SSEClient:
                     
                     # 调试：输出原始行数据
                     if line:
-                        print(f"[SSE原始行#{line_count}] {repr(line)}")
+                        logger.debug(f"[SSE原始行#{line_count}] {repr(line)}")
                     else:
-                        print(f"[SSE原始行#{line_count}] <空行，事件分隔符>")
+                        logger.debug(f"[SSE原始行#{line_count}] <空行，事件分隔符>")
                     
                     # 空行表示事件结束
                     if not line:
                         if event_lines:
-                            print(f"[SSE事件解析] 开始解析事件，包含{len(event_lines)}行数据:")
+                            logger.debug(f"[SSE事件解析] 开始解析事件，包含{len(event_lines)}行数据:")
                             for i, event_line in enumerate(event_lines, 1):
-                                print(f"  行{i}: {repr(event_line)}")
+                                logger.debug(f"  行{i}: {repr(event_line)}")
                             
                             event = self.parse_sse_event(event_lines)
                             if event:
                                 self.events.append(event)
                                 event_count += 1
-                                print(f"[SSE事件解析] 成功解析事件#{event_count}: 类型={event.event_type}, ID={event.event_id}")
+                                logger.debug(f"[SSE事件解析] 成功解析事件#{event_count}: 类型={event.event_type}, ID={event.event_id}")
                                 yield event
                             else:
-                                print(f"[SSE事件解析] 解析结果为空，跳过此事件")
+                                logger.debug(f"[SSE事件解析] 解析结果为空，跳过此事件")
                             event_lines = []
                         else:
-                            print(f"[SSE事件解析] 空行但无待解析数据，跳过")
+                            logger.debug(f"[SSE事件解析] 空行但无待解析数据，跳过")
                     else:
                         event_lines.append(line)
                 
                 # 处理最后一个事件（如果没有以空行结尾）
                 if event_lines:
-                    print(f"[SSE事件解析] 处理最后一个事件，包含{len(event_lines)}行数据:")
+                    logger.debug(f"[SSE事件解析] 处理最后一个事件，包含{len(event_lines)}行数据:")
                     for i, event_line in enumerate(event_lines, 1):
-                        print(f"  行{i}: {repr(event_line)}")
+                        logger.debug(f"  行{i}: {repr(event_line)}")
                     
                     event = self.parse_sse_event(event_lines)
                     if event:
                         self.events.append(event)
                         event_count += 1
-                        print(f"[SSE事件解析] 成功解析最后一个事件#{event_count}: 类型={event.event_type}, ID={event.event_id}")
+                        logger.debug(f"[SSE事件解析] 成功解析最后一个事件#{event_count}: 类型={event.event_type}, ID={event.event_id}")
                         yield event
                     else:
-                        print(f"[SSE事件解析] 最后一个事件解析结果为空，跳过")
+                        logger.debug(f"[SSE事件解析] 最后一个事件解析结果为空，跳过")
                 
-                print(f"[SSE监听] 监听结束，共处理{line_count}行原始数据，解析出{event_count}个有效事件")
+                logger.info(f"[SSE监听] 监听结束，共处理{line_count}行原始数据，解析出{event_count}个有效事件")
                         
         except httpx.TimeoutException:
             raise Exception(f"SSE连接超时（{self.timeout}秒）")
@@ -431,10 +439,10 @@ class DifySseNodePluginTool(Tool):
             try:
                 import json as json_lib
                 parsed_data = json_lib.loads(data)
-                print(f"[数据解析] 成功解析JSON数据: {type(parsed_data)}")
+                logger.debug(f"[数据解析] 成功解析JSON数据: {type(parsed_data)}")
                 return parsed_data
             except json_lib.JSONDecodeError as e:
-                print(f"[数据解析] JSON解析失败: {e}, 保持原始字符串格式")
+                logger.debug(f"[数据解析] JSON解析失败: {e}, 保持原始字符串格式")
                 return data
         else:
             # 不是JSON格式，返回原始字符串
@@ -451,8 +459,8 @@ class DifySseNodePluginTool(Tool):
                 cleaned_str = ''.join(char if ord(char) < 128 or not char.isspace() else ' ' for char in cleaned_str)
                 cleaned_str = cleaned_str.strip()
                 
-                print(f"[Headers清理] 原始: {repr(headers_str)}")
-                print(f"[Headers清理] 清理后: {repr(cleaned_str)}")
+                logger.debug(f"[Headers清理] 原始: {repr(headers_str)}")
+                logger.debug(f"[Headers清理] 清理后: {repr(cleaned_str)}")
                 
                 headers = json.loads(cleaned_str)
                 if not isinstance(headers, dict):
@@ -472,8 +480,8 @@ class DifySseNodePluginTool(Tool):
                 cleaned_str = ''.join(char if ord(char) < 128 or not char.isspace() else ' ' for char in cleaned_str)
                 cleaned_str = cleaned_str.strip()
                 
-                print(f"[Query清理] 原始: {repr(params_str)}")
-                print(f"[Query清理] 清理后: {repr(cleaned_str)}")
+                logger.debug(f"[Query清理] 原始: {repr(params_str)}")
+                logger.debug(f"[Query清理] 清理后: {repr(cleaned_str)}")
                 
                 params = json.loads(cleaned_str)
                 if not isinstance(params, dict):
@@ -508,9 +516,9 @@ class DifySseNodePluginTool(Tool):
         """执行SSE请求"""
         try:
             # 控制台日志：输出入参
-            print("=" * 80)
-            print("[工具调用] DifySseNodePluginTool._invoke 开始执行")
-            print(f"[入参] 原始参数: {json.dumps(tool_parameters, ensure_ascii=False, indent=2)}")
+            logger.debug("=" * 80)
+            logger.info("[工具调用] DifySseNodePluginTool._invoke 开始执行")
+            logger.debug(f"[入参] 原始参数: {json.dumps(tool_parameters, ensure_ascii=False, indent=2)}")
             
             # 获取参数
             url = tool_parameters.get('url', '').strip()
@@ -526,44 +534,44 @@ class DifySseNodePluginTool(Tool):
             max_duration = int(tool_parameters.get('max_duration', 300))
             
             # 控制台日志：输出解析后的参数
-            print(f"[参数解析] URL: {url}")
-            print(f"[参数解析] Method: {method}")
-            print(f"[参数解析] Headers字符串: {headers_str}")
-            print(f"[参数解析] Query参数字符串: {query_params_str}")
-            print(f"[参数解析] Body长度: {len(body) if body else 0}")
-            print(f"[参数解析] Body类型: {body_type}")
-            print(f"[参数解析] Body前200字符: {repr(body[:200]) if body else 'None'}")
-            print(f"[参数解析] Timeout: {timeout}, Max Events: {max_events}, Max Duration: {max_duration}")
+            logger.debug(f"[参数解析] URL: {url}")
+            logger.debug(f"[参数解析] Method: {method}")
+            logger.debug(f"[参数解析] Headers字符串: {headers_str}")
+            logger.debug(f"[参数解析] Query参数字符串: {query_params_str}")
+            logger.debug(f"[参数解析] Body长度: {len(body) if body else 0}")
+            logger.debug(f"[参数解析] Body类型: {body_type}")
+            logger.debug(f"[参数解析] Body前200字符: {repr(body[:200]) if body else 'None'}")
+            logger.debug(f"[参数解析] Timeout: {timeout}, Max Events: {max_events}, Max Duration: {max_duration}")
             
             # 验证必需参数
-            print(f"[URL验证] 开始验证URL: {url}")
+            logger.debug(f"[URL验证] 开始验证URL: {url}")
             self._validate_url(url)
-            print(f"[URL验证] URL验证通过")
+            logger.debug(f"[URL验证] URL验证通过")
             
             # 解析headers和查询参数
-            print(f"[Headers解析] 开始解析Headers: {headers_str}")
+            logger.debug(f"[Headers解析] 开始解析Headers: {headers_str}")
             headers = self._parse_headers(headers_str)
-            print(f"[Headers解析] Headers解析结果: {json.dumps(headers, ensure_ascii=False, indent=2)}")
+            logger.debug(f"[Headers解析] Headers解析结果: {json.dumps(headers, ensure_ascii=False, indent=2)}")
             
-            print(f"[Query解析] 开始解析Query参数: {query_params_str}")
+            logger.debug(f"[Query解析] 开始解析Query参数: {query_params_str}")
             query_params = self._parse_query_params(query_params_str)
-            print(f"[Query解析] Query参数解析结果: {json.dumps(query_params, ensure_ascii=False, indent=2)}")
+            logger.debug(f"[Query解析] Query参数解析结果: {json.dumps(query_params, ensure_ascii=False, indent=2)}")
             
             # 构建完整URL
-            print(f"[URL构建] 开始构建完整URL")
+            logger.debug(f"[URL构建] 开始构建完整URL")
             full_url = self._build_url_with_params(url, query_params)
-            print(f"[URL构建] 完整URL: {full_url}")
+            logger.debug(f"[URL构建] 完整URL: {full_url}")
             
             # 调试信息只在控制台输出，不作为工具结果返回
-            print(f"[调试信息] 解析后的参数:")
-            print(f"  - URL: {full_url}")
-            print(f"  - Method: {method}")
-            print(f"  - Headers: {json.dumps(headers, ensure_ascii=False)}")
-            print(f"  - Body长度: {len(body) if body else 0}")
-            print(f"  - 超时设置: {timeout}秒, 最大事件: {max_events}, 最大时长: {max_duration}秒")
+            logger.debug(f"[调试信息] 解析后的参数:")
+            logger.debug(f"  - URL: {full_url}")
+            logger.debug(f"  - Method: {method}")
+            logger.debug(f"  - Headers: {json.dumps(headers, ensure_ascii=False)}")
+            logger.debug(f"  - Body长度: {len(body) if body else 0}")
+            logger.debug(f"  - 超时设置: {timeout}秒, 最大事件: {max_events}, 最大时长: {max_duration}秒")
             
             # 尝试连接SSE服务器
-            print(f"[SSE连接] 开始尝试连接SSE服务器")
+            logger.info(f"[SSE连接] 开始尝试连接SSE服务器")
             connection_successful = False
             last_error = None
             retry_attempts = 3  # 固定重试次数
@@ -571,13 +579,13 @@ class DifySseNodePluginTool(Tool):
             
             for attempt in range(retry_attempts + 1):
                 try:
-                    print(f"[SSE连接] 第{attempt + 1}次尝试连接")
+                    logger.debug(f"[SSE连接] 第{attempt + 1}次尝试连接")
                     # 创建SSE客户端
                     sse_client = SSEClient(full_url, method, headers, body, body_type, timeout)
-                    print(f"[SSE连接] SSE客户端创建成功")
+                    logger.debug(f"[SSE连接] SSE客户端创建成功")
                     
                     # 连接并监听事件
-                    print(f"[SSE连接] 开始连接并监听事件")
+                    logger.info(f"[SSE连接] 开始连接并监听事件")
                     start_time = time.time()
                     event_count = 0
                     
@@ -596,7 +604,7 @@ class DifySseNodePluginTool(Tool):
                             "retry": event.retry
                         }
                         all_events.append(event_info)
-                        print(f"[事件收集] 收集到第{event_count}个事件: {event.event_type}, 数据类型: {type(parsed_data)}")
+                        logger.debug(f"[事件收集] 收集到第{event_count}个事件: {event.event_type}, 数据类型: {type(parsed_data)}")
                     
                     connection_successful = True
                     end_time = time.time()
@@ -613,7 +621,7 @@ class DifySseNodePluginTool(Tool):
                     # 构建文本摘要
                     text_summary = f"SSE连接成功完成\n连接URL: {full_url}\n接收事件数: {event_count}\n连接时长: {duration:.2f}秒\n连接状态: 成功"
                     
-                    print(f"[最终结果] 构建完成，包含{len(all_events)}个事件")
+                    logger.debug(f"[最终结果] 构建完成，包含{len(all_events)}个事件")
                     
                     # 返回JSON结果
                     yield self.create_json_message(final_result)
@@ -637,17 +645,17 @@ class DifySseNodePluginTool(Tool):
                     
                 except Exception as e:
                     last_error = str(e)
-                    print(f"[SSE错误] 第{attempt + 1}次尝试失败: {last_error}")
+                    logger.warning(f"[SSE错误] 第{attempt + 1}次尝试失败: {last_error}")
                     if attempt < retry_attempts:
-                        print(f"[SSE重试] 等待2秒后进行第{attempt + 2}次重试...")
+                        logger.info(f"[SSE重试] 等待2秒后进行第{attempt + 2}次重试...")
                         time.sleep(2)  # 等待2秒后重试
                     else:
-                        print(f"[SSE错误] 所有重试都失败了")
+                        logger.error(f"[SSE错误] 所有重试都失败了")
                         break
             
             # 如果所有重试都失败了
             if not connection_successful:
-                print(f"[SSE错误] 连接最终失败，错误: {last_error}")
+                logger.error(f"[SSE错误] 连接最终失败，错误: {last_error}")
                 final_result = {
                     "status": "failed",
                     "total_events": 0,
@@ -659,7 +667,7 @@ class DifySseNodePluginTool(Tool):
                 # 构建失败文本摘要
                 text_summary = f"SSE连接失败\n连接URL: {full_url}\n错误信息: {last_error or '未知错误'}\n重试次数: {retry_attempts + 1}\n连接状态: 失败"
                 
-                print(f"[出参] 输出错误结果")
+                logger.debug(f"[出参] 输出错误结果")
                 
                 # 返回JSON结果
                 yield self.create_json_message(final_result)
@@ -679,13 +687,13 @@ class DifySseNodePluginTool(Tool):
                 # 返回自定义变量 - 连接时长
                 yield self.create_variable_message("connection_duration", 0)
             
-            print(f"[工具调用] DifySseNodePluginTool._invoke 执行完成")
-            print("=" * 80)
+            logger.info(f"[工具调用] DifySseNodePluginTool._invoke 执行完成")
+            logger.debug("=" * 80)
                 
         except Exception as e:
             # 处理参数验证或其他错误
             error_msg = f"参数错误或系统错误: {str(e)}"
-            print(f"[系统错误] {error_msg}")
+            logger.error(f"[系统错误] {error_msg}")
             final_result = {
                 "status": "error",
                 "total_events": 0,
@@ -697,7 +705,7 @@ class DifySseNodePluginTool(Tool):
             # 构建错误文本摘要
             text_summary = f"SSE工具执行错误\n错误信息: {error_msg}\n连接状态: 错误"
             
-            print(f"[出参] 输出系统错误结果")
+            logger.debug(f"[出参] 输出系统错误结果")
             
             # 返回JSON结果
             yield self.create_json_message(final_result)
@@ -717,5 +725,5 @@ class DifySseNodePluginTool(Tool):
             # 返回自定义变量 - 连接时长
             yield self.create_variable_message("connection_duration", 0)
             
-            print(f"[工具调用] DifySseNodePluginTool._invoke 异常结束")
-            print("=" * 80)
+            logger.info(f"[工具调用] DifySseNodePluginTool._invoke 异常结束")
+            logger.debug("=" * 80)

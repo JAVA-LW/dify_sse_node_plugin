@@ -174,3 +174,8 @@ cython_debug/
 .DS_Store
 .AppleDouble
 .LSOverride
+docs/debug.json
+docs/development_summary.md
+docs/dify_chatflow_sse_guide.md
+examples/test_sse.py
+examples/test_sse.py
