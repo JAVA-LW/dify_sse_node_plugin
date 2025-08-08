@@ -1,6 +1,6 @@
 identity:
   name: "dify_chatflow_sse"
-  author: "lw"
+  author: "老文"
   label:
     en_US: "Dify Chatflow SSE"
     zh_Hans: "Dify Chatflow SSE 请求"
@@ -156,7 +156,7 @@ parameters:
   - name: timeout
     type: number
     required: false
-    default: 60
+    default: 120
     label:
       en_US: "Connection Timeout (seconds)"
       zh_Hans: "连接超时时间（秒）"
@@ -171,7 +171,7 @@ parameters:
   - name: max_events
     type: number
     required: false
-    default: 200
+    default: 10000
     label:
       en_US: "Maximum Events"
       zh_Hans: "最大事件数"
