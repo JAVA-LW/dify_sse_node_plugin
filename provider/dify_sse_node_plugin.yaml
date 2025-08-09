@@ -1,60 +1,96 @@
 identity:
-  author: "lw"
-  name: "dify_sse_node_plugin"
+  author: "tdcktz"
+  name: "sse_request_tool"
   label:
-    en_US: "dify_sse_node_plugin"
-    zh_Hans: "dify_sse_node_plugin"
-    pt_BR: "dify_sse_node_plugin"
+    en_US: "sse_request_tool"
+    zh_Hans: "sse请求工具"
+    pt_BR: "sse_request_tool"
   description:
     en_US: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
-    zh_Hans: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
-    pt_BR: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+    zh_Hans: "在Dify的工作流节点中发送SSE请求。SSE节点将支持建立长连接，接收服务器推送的实时数据流，并在通信结束后输出完整结果。"
+    pt_BR: "Envie uma solicitação SSE no nó de fluxo de trabalho do Dify. O nó SSE suportará o estabelecimento de uma conexão longa, receberá fluxos de dados em tempo real enviados pelo servidor e produzirá o resultado completo após o término da comunicação."
   icon: "icon.svg"
 
 #########################################################################################
 # If you want to support OAuth, you can uncomment the following code.
 #########################################################################################
 # oauth_schema:
-#   client_schema:
-#     - name: "client_id"
-#       type: "secret-input"
-#       required: true
-#       url: https://example.com/oauth/authorize
-#       placeholder:
-#         en_US: "Please input your Client ID"
-#         zh_Hans: "请输入你的 Client ID"
-#         pt_BR: "Insira seu Client ID"
-#       help:
-#         en_US: "Client ID is used to authenticate requests to the example.com API."
-#         zh_Hans: "Client ID 用于认证请求到 example.com API。"
-#         pt_BR: "Client ID é usado para autenticar solicitações à API do example.com."
-#       label:
-#         zh_Hans: "Client ID"
-#         en_US: "Client ID"
-#     - name: "client_secret"
-#       type: "secret-input"
-#       required: true
-#       url: https://example.com/oauth/authorize
-#       placeholder:
-#         en_US: "Please input your Client Secret"
-#         zh_Hans: "请输入你的 Client Secret"
-#         pt_BR: "Insira seu Client Secret"
-#       help:
-#         en_US: "Client Secret is used to authenticate requests to the example.com API."
-#         zh_Hans: "Client Secret 用于认证请求到 example.com API。"
-#         pt_BR: "Client Secret é usado para autenticar solicitações à API do example.com."
-#       label:
-#         zh_Hans: "Client Secret"
-#         en_US: "Client Secret"
-#   credentials_schema:
-#     - name: "access_token"
-#       type: "secret-input"
-#       label:
-#         zh_Hans: "Access Token"
-#         en_US: "Access Token"
+#  client_schema:
+#    - name: "client_id"
+#      type: "secret-input"
+#      required: true
+#      url: https://example.com/oauth/authorize
+#      placeholder:
+#        en_US: "Please input your Client ID"
+#        zh_Hans: "请输入你的 Client ID"
+#        pt_BR: "Insira seu Client ID"
+#      help:
+#        en_US: "Client ID is used to authenticate requests to the example.com API."
+#        zh_Hans: "Client ID 用于认证请求到 example.com API。"
+#        pt_BR: "Client ID é usado para autenticar solicitações à API do example.com."
+#      label:
+#        zh_Hans: "Client ID"
+#        en_US: "Client ID"
+#    - name: "client_secret"
+#      type: "secret-input"
+#      required: true
+#      url: https://example.com/oauth/authorize
+#      placeholder:
+#        en_US: "Please input your Client Secret"
+#        zh_Hans: "请输入你的 Client Secret"
+#        pt_BR: "Insira seu Client Secret"
+#      help:
+#        en_US: "Client Secret is used to authenticate requests to the example.com API."
+#        zh_Hans: "Client Secret 用于认证请求到 example.com API。"
+#        pt_BR: "Client Secret é usado para autenticar solicitações à API do example.com."
+#      label:
+#        zh_Hans: "Client Secret"
+#        en_US: "Client Secret"
+#  credentials_schema:
+#    - name: "access_token"
+#      type: "secret-input"
+#      label:
+#        zh_Hans: "Access Token"
+#        en_US: "Access Token"
+
+credentials_for_provider:
+  log_level:
+    type: select
+    required: false
+    default: INFO
+    options:
+      - value: DEBUG
+        label:
+          en_US: DEBUG
+          zh_Hans: 调试
+          pt_BR: DEBUG
+      - value: INFO
+        label:
+          en_US: INFO
+          zh_Hans: 信息
+          pt_BR: INFO
+      - value: WARNING
+        label:
+          en_US: WARNING
+          zh_Hans: 警告
+          pt_BR: WARNING
+      - value: ERROR
+        label:
+          en_US: ERROR
+          zh_Hans: 错误
+          pt_BR: ERROR
+    label:
+      en_US: Log Level
+      zh_Hans: 日志级别
+      pt_BR: Nível de Log
+    help:
+      en_US: Set the logging level for the plugin. DEBUG shows detailed information, INFO shows general information, WARNING shows warnings only, ERROR shows errors only.
+      zh_Hans: 设置插件的日志级别。DEBUG显示详细信息，INFO显示一般信息，WARNING仅显示警告，ERROR仅显示错误。
+      pt_BR: Defina o nível de log para o plugin. DEBUG mostra informações detalhadas, INFO mostra informações gerais, WARNING mostra apenas avisos, ERROR mostra apenas erros.
 
 tools:
   - tools/dify_sse_node_plugin.yaml
+  - tools/dify_chatflow_sse.yaml
 extra:
   python:
     source: provider/dify_sse_node_plugin.py

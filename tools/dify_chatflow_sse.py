@@ -1,6 +1,5 @@
 import json
 import time
-import re
 from collections.abc import Generator
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode, urlparse
@@ -16,11 +15,12 @@ from dify_plugin.config.logger_format import plugin_logger_handler
 
 # 使用自定义处理器设置日志
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)  # 设置为DEBUG以确保所有级别的日志都能被处理
+logger.setLevel(logging.INFO) 
 logger.addHandler(plugin_logger_handler)
 
-# 确保plugin_logger_handler初始设置为DEBUG级别，后续会动态调整
-plugin_logger_handler.setLevel(logging.INFO)
+plugin_logger_handler.setLevel(logging.INFO )
+
+
 
 class SSEEvent:
     """SSE事件数据结构"""
@@ -32,8 +32,8 @@ class SSEEvent:
         self.timestamp = datetime.now().isoformat()
 
 
-class SSEClient:
-    """SSE客户端实现"""
+class DifyChatflowSSEClient:
+    """Dify Chatflow专用SSE客户端实现"""
     
     def __init__(self, url: str, method: str = 'GET', headers: Optional[Dict[str, str]] = None, 
                  body: Optional[str] = None, body_type: str = "json", timeout: int = 30):
@@ -172,7 +172,7 @@ class SSEClient:
                         decoded_data = json_lib.dumps(parsed_data, ensure_ascii=False, separators=(',', ':'))
                         
                         logger.debug(f"[Unicode解码] 原始data: {data[:100]}...")
-                        logger.debug(f"[Unicode解码] 解码后data: {decoded_data[:100]}...")
+                        logger.debug(f"[Unicode解码] 解码后data: {decoded_data}...")
                         
                         data = decoded_data
                         
@@ -270,17 +270,17 @@ class SSEClient:
                             logger.debug(f"[JSON处理] 清理后body长度: {len(cleaned_body)}")
                             logger.debug(f"[JSON处理] 清理后body前100字符: {repr(cleaned_body[:100])}")
                             
-                            # 第二步：尝试解析JSON
-                            parsed_json = json.loads(cleaned_body)
+                            # 第二步：尝试解析JSON，确保格式正确
+                            parsed_json = json_lib.loads(cleaned_body)
                             logger.debug(f"[JSON处理] JSON解析成功，类型: {type(parsed_json)}")
                             
-                            # 第三步：重新序列化JSON以确保格式正确
-                            normalized_json = json.dumps(parsed_json, ensure_ascii=False, separators=(',', ':'))
+                            # 第三步：重新序列化，确保格式标准化
+                            normalized_json = json_lib.dumps(parsed_json, ensure_ascii=False, separators=(',', ':'))
                             logger.debug(f"[JSON处理] JSON重新序列化成功，新长度: {len(normalized_json)}")
                             logger.debug(f"[JSON处理] 序列化后前100字符: {repr(normalized_json[:100])}")
                             
-                            # 第四步：编码为UTF-8字节
-                            stream_kwargs['content'] = normalized_json.encode('utf-8')
+                            # 第四步：使用标准化后的JSON
+                            stream_kwargs["content"] = normalized_json.encode('utf-8')
                             logger.debug(f"[JSON处理] 编码为UTF-8成功，最终长度: {len(stream_kwargs['content'])}")
                             
                         except json_lib.JSONDecodeError as e:
@@ -379,7 +379,7 @@ class SSEClient:
                     
                     # 调试：输出原始行数据
                     if line:
-                        logger.debug(f"[SSE原始行#{line_count}] {repr(line)}")
+                        logger.debug(f"[SSE原始行#{line_count}] {repr(line[:100])}")
                     else:
                         logger.debug(f"[SSE原始行#{line_count}] <空行，事件分隔符>")
                     
@@ -388,7 +388,7 @@ class SSEClient:
                         if event_lines:
                             logger.debug(f"[SSE事件解析] 开始解析事件，包含{len(event_lines)}行数据:")
                             for i, event_line in enumerate(event_lines, 1):
-                                logger.debug(f"  行{i}: {repr(event_line)}")
+                                logger.debug(f"  行{i}: {repr(event_line[:100])}")
                             
                             event = self.parse_sse_event(event_lines)
                             if event:
@@ -419,16 +419,104 @@ class SSEClient:
                     else:
                         logger.debug(f"[SSE事件解析] 最后一个事件解析结果为空，跳过")
                 
-                logger.info(f"[SSE监听] 监听结束，共处理{line_count}行原始数据，解析出{event_count}个有效事件")
+                logger.debug(f"[SSE监听] 监听结束，共处理{line_count}行原始数据，解析出{event_count}个有效事件")
                         
         except httpx.TimeoutException:
             raise Exception(f"SSE连接超时（{self.timeout}秒）")
         except httpx.RequestError as e:
             raise Exception(f"SSE连接错误: {str(e)}")
+    
+    def extract_chatflow_answer(self, events) -> Optional[str]:
+        """从事件列表中提取chatflow_answer"""
+        for event in events:
+            # 处理字典格式的事件（来自 _invoke 方法）
+            if isinstance(event, dict):
+                event_type = event.get("event_type")
+                data = event.get("data")
+                
+                # 检查直接的 workflow_finished 事件
+                if event_type == "workflow_finished" and data:
+                    # 如果data已经是字典，直接使用
+                    if isinstance(data, dict) and "chatflow_answer" in data:
+                        return data["chatflow_answer"]
+                    # 如果data是字符串，尝试解析JSON
+                    elif isinstance(data, str):
+                        try:
+                            import json as json_lib
+                            parsed_data = json_lib.loads(data)
+                            if isinstance(parsed_data, dict) and "chatflow_answer" in parsed_data:
+                                return parsed_data["chatflow_answer"]
+                        except json_lib.JSONDecodeError:
+                            continue
+                
+                # 检查嵌套在data字段中的workflow_finished事件
+                if isinstance(data, dict):
+                    nested_event = data.get("event")
+                    if nested_event == "workflow_finished":
+                        # 检查data.data字段中的chatflow_answer
+                        nested_data = data.get("data")
+                        if isinstance(nested_data, dict):
+                            # 检查outputs.answer字段（从日志中看到的结构）
+                            outputs = nested_data.get("outputs")
+                            if isinstance(outputs, dict) and "answer" in outputs:
+                                return outputs["answer"]
+                            # 检查直接的chatflow_answer字段
+                            if "chatflow_answer" in nested_data:
+                                return nested_data["chatflow_answer"]
+                        
+                        # 检查data字段本身是否包含chatflow_answer
+                        if "chatflow_answer" in data:
+                            return data["chatflow_answer"]
+                
+            # 处理 SSEEvent 对象格式（向后兼容）
+            elif hasattr(event, 'event_type') and hasattr(event, 'data'):
+                if event.event_type == "workflow_finished" and event.data:
+                    try:
+                        import json as json_lib
+                        data = json_lib.loads(event.data)
+                        if isinstance(data, dict) and "chatflow_answer" in data:
+                            return data["chatflow_answer"]
+                    except json_lib.JSONDecodeError:
+                        continue
+        return None
+    
+    def should_keep_event(self, event) -> bool:
+        """判断是否应该保留该事件"""
+        # 只保留真正的关键事件类型：message_end 和 workflow_finished
+        key_event_types = {
+            "message_end", "workflow_finished"
+        }
+        
+        # 处理字典格式的事件（来自 _invoke 方法）
+        if isinstance(event, dict):
+            event_type = event.get("event_type")
+            
+            # 如果事件类型直接匹配，返回True
+            if event_type in key_event_types:
+                return True
+            
+            # 检查嵌套在data字段中的event属性
+            data = event.get("data")
+            if isinstance(data, dict):
+                nested_event_type = data.get("event")
+                if nested_event_type in key_event_types:
+                    return True
+            
+            return False
+            
+        # 处理 SSEEvent 对象格式（向后兼容）
+        elif hasattr(event, 'event_type'):
+            return event.event_type in key_event_types
+        
+        return False
+    
+    def filter_key_events(self, events):
+        """过滤出关键事件"""
+        return [event for event in events if self.should_keep_event(event)]
 
 
-class DifySseNodePluginTool(Tool):
-    """Dify SSE请求工具"""
+class DifyChatflowSSETool(Tool):
+    """Dify Chatflow专用SSE请求工具"""
     
     def _parse_event_data(self, data: str) -> Any:
         """尝试解析事件数据，如果是JSON格式则返回对象，否则返回原始字符串"""
@@ -518,9 +606,57 @@ class DifySseNodePluginTool(Tool):
     def _invoke(self, tool_parameters: dict[str, Any]) -> Generator[ToolInvokeMessage, None, None]:
         """执行SSE请求"""
         try:
+            # 动态设置日志级别 - 从provider配置中获取log_level
+            try:
+                if hasattr(self, 'runtime') and self.runtime and hasattr(self.runtime, 'credentials'):
+                    # 调试：输出完整的credentials信息
+                    logger.info(f"[日志配置] 获取到的credentials: {self.runtime.credentials}")
+                    
+                    log_level_str = self.runtime.credentials.get('log_level', 'INFO')
+                    logger.info(f"[日志配置] 从credentials获取的log_level: {log_level_str}")
+                    
+                    # 将字符串转换为logging级别
+                    log_level_mapping = {
+                        'DEBUG': logging.DEBUG,
+                        'INFO': logging.INFO,
+                        'WARNING': logging.WARNING,
+                        'ERROR': logging.ERROR
+                    }
+                    log_level = log_level_mapping.get(log_level_str.upper(), logging.INFO)
+                    
+                    # 动态设置logger的级别
+                    logger.setLevel(log_level)
+                    
+                    # 重要：确保plugin_logger_handler也应用相同的日志级别
+                    for handler in logger.handlers:
+                        if hasattr(handler, 'setLevel'):
+                            handler.setLevel(log_level)
+                            # 特别处理plugin_logger_handler
+                            if hasattr(handler, '__class__') and 'plugin' in str(handler.__class__).lower():
+                                logger.info(f"[日志配置] 为plugin_logger_handler设置级别: {log_level_str}")
+                    
+                    # 同时设置根logger的级别，确保所有日志都能被处理
+                    root_logger = logging.getLogger()
+                    if root_logger.level > log_level:
+                        root_logger.setLevel(log_level)
+                    
+                    logger.info(f"[日志配置] 动态设置日志级别为: {log_level_str} ({log_level})")
+                    
+                    # 测试不同级别的日志输出
+                    if log_level_str.upper() == 'DEBUG':
+                        logger.debug("[日志测试] DEBUG级别日志测试")
+                        logger.info("[日志测试] INFO级别日志测试")
+                        logger.warning("[日志测试] WARNING级别日志测试")
+                        logger.error("[日志测试] ERROR级别日志测试")
+                else:
+                    logger.info("[日志配置] 无法获取provider配置，使用默认INFO级别")
+            except Exception as e:
+                logger.error(f"[日志配置] 设置日志级别时出错: {e}，使用默认INFO级别")
+                logger.setLevel(logging.INFO)
+            
             # 控制台日志：输出入参
             logger.debug("=" * 80)
-            logger.info("[工具调用] DifySseNodePluginTool._invoke 开始执行")
+            logger.info("[工具调用] DifyChatflowSSETool._invoke 开始执行")
             logger.debug(f"[入参] 原始参数: {json.dumps(tool_parameters, ensure_ascii=False, indent=2)}")
             
             # 获取参数
@@ -584,7 +720,7 @@ class DifySseNodePluginTool(Tool):
                 try:
                     logger.debug(f"[SSE连接] 第{attempt + 1}次尝试连接")
                     # 创建SSE客户端
-                    sse_client = SSEClient(full_url, method, headers, body, body_type, timeout)
+                    sse_client = DifyChatflowSSEClient(full_url, method, headers, body, body_type, timeout)
                     logger.debug(f"[SSE连接] SSE客户端创建成功")
                     
                     # 连接并监听事件
@@ -613,33 +749,54 @@ class DifySseNodePluginTool(Tool):
                     end_time = time.time()
                     duration = end_time - start_time
                     
-                    # 构建最终结果对象，不包含events字段（已通过events_stream变量提供）
+                    # Chatflow专用处理：提取chatflow_answer
+                    logger.debug(f"[Chatflow处理] 开始提取chatflow_answer")
+                    chatflow_answer = sse_client.extract_chatflow_answer(all_events)
+                    logger.debug(f"[Chatflow处理] 提取到的chatflow_answer: {chatflow_answer}")
+                    
+                    # Chatflow专用处理：过滤关键事件
+                    logger.debug("Chatflow工作流已触发，开始过滤关键事件")
+                    key_events = sse_client.filter_key_events(all_events)
+                    logger.info(f"[Chatflow处理] 过滤出{len(key_events)}个关键事件")
+                    
+                    # 构建最终结果对象，包含chatflow专用字段
                     final_result = {
                         "status": "completed",
                         "total_events": event_count,
                         "connection_duration": round(duration, 2),
-                        "summary": f"SSE连接成功，接收到{event_count}个事件，耗时{duration:.2f}秒"
+                        "chatflow_answer": chatflow_answer,
+                        "summary": f"Chatflow SSE连接成功，接收到{event_count}个事件（{len(key_events)}个关键事件），耗时{duration:.2f}秒"
                     }
                     
-                    # 构建文本摘要
-                    text_summary = f"SSE连接成功完成\n连接URL: {full_url}\n接收事件数: {event_count}\n连接时长: {duration:.2f}秒\n连接状态: 成功"
+                    # 构建文本摘要 - 使用chatflow_answer作为文本输出
+                    text_summary = chatflow_answer if chatflow_answer else f"[最终结果] 构建完成，包含{len(all_events)}个事件，{len(key_events)}个关键事件"
                     
-                    logger.debug(f"[最终结果] 构建完成，包含{len(all_events)}个事件")
+                    logger.debug(f"[最终结果] 构建完成，包含{len(all_events)}个事件，{len(key_events)}个关键事件")
                     
                     # 返回JSON结果
                     yield self.create_json_message(final_result)
                     
-                    # 返回文本摘要
+                    # 返回文本摘要 - 现在使用chatflow_answer的内容
                     yield self.create_text_message(text_summary)
                     
-                    # 返回自定义变量 - 事件流数组
-                    yield self.create_variable_message("events_stream", all_events)
+                    # 返回自定义变量 - 事件流数组（如果没有关键事件则返回全部事件，否则返回关键事件）
+                    events_to_stream = key_events if len(key_events) > 0 else all_events
+                    yield self.create_variable_message("events_stream", events_to_stream)
+                    
+                    # 移除key_events变量输出 - 根据用户要求，这个变量是多余的
+                    # yield self.create_variable_message("key_events", key_events)
+                    
+                    # 返回自定义变量 - Chatflow答案（Chatflow专用）
+                    yield self.create_variable_message("chatflow_answer", chatflow_answer)
                     
                     # 返回自定义变量 - 连接状态
                     yield self.create_variable_message("connection_status", "completed")
                     
                     # 返回自定义变量 - 事件总数
                     yield self.create_variable_message("total_events", event_count)
+                    
+                    # 移除key_events_count变量输出 - 因为key_events已经被移除，这个计数也不需要了
+                    # yield self.create_variable_message("key_events_count", len(key_events))
                     
                     # 返回自定义变量 - 连接时长
                     yield self.create_variable_message("connection_duration", round(duration, 2))
@@ -648,17 +805,17 @@ class DifySseNodePluginTool(Tool):
                     
                 except Exception as e:
                     last_error = str(e)
-                    logger.warning(f"[SSE错误] 第{attempt + 1}次尝试失败: {last_error}")
+                    logger.debug(f"[SSE错误] 第{attempt + 1}次尝试失败: {last_error}")
                     if attempt < retry_attempts:
-                        logger.info(f"[SSE重试] 等待2秒后进行第{attempt + 2}次重试...")
+                        logger.debug(f"[SSE重试] 等待2秒后进行第{attempt + 2}次重试...")
                         time.sleep(2)  # 等待2秒后重试
                     else:
-                        logger.error(f"[SSE错误] 所有重试都失败了")
+                        logger.debug(f"[SSE错误] 所有重试都失败了")
                         break
             
             # 如果所有重试都失败了
             if not connection_successful:
-                logger.error(f"[SSE错误] 连接最终失败，错误: {last_error}")
+                logger.debug(f"[SSE错误] 连接最终失败，错误: {last_error}")
                 final_result = {
                     "status": "failed",
                     "total_events": 0,
@@ -691,12 +848,12 @@ class DifySseNodePluginTool(Tool):
                 yield self.create_variable_message("connection_duration", 0)
             
             logger.info(f"[工具调用] DifySseNodePluginTool._invoke 执行完成")
-            logger.debug("=" * 80)
+            logger.info("=" * 80)
                 
         except Exception as e:
             # 处理参数验证或其他错误
             error_msg = f"参数错误或系统错误: {str(e)}"
-            logger.error(f"[系统错误] {error_msg}")
+            logger.debug(f"[系统错误] {error_msg}")
             final_result = {
                 "status": "error",
                 "total_events": 0,

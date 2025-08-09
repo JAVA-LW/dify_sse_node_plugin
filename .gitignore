@@ -174,3 +174,6 @@ cython_debug/
 .DS_Store
 .AppleDouble
 .LSOverride
+docs/
+examples/test_sse.py
+examples/test_sse.py

@@ -1,0 +1,246 @@
+identity:
+  name: "dify_chatflow_sse"
+  author: "老文"
+  label:
+    en_US: "Dify Chatflow SSE"
+    zh_Hans: "Dify Chatflow SSE 请求"
+    pt_BR: "Dify Chatflow SSE"
+  description:
+    en_US: "Specialized SSE tool for Dify Chatflow that extracts answer content from workflow_finished and message_end events."
+    zh_Hans: "专门用于Dify Chatflow的SSE工具，从workflow_finished和message_end事件中提取答案内容。"
+    pt_BR: "Ferramenta SSE especializada para Dify Chatflow que extrai conteúdo de resposta de eventos workflow_finished e message_end."
+  icon: "🔄"
+description:
+  human:
+    en_US: "Specialized SSE tool for Dify Chatflow that extracts answer content from workflow_finished and message_end events."
+    zh_Hans: "专门用于Dify Chatflow的SSE工具，从workflow_finished和message_end事件中提取答案内容。"
+    pt_BR: "Ferramenta SSE especializada para Dify Chatflow que extrai conteúdo de resposta de eventos workflow_finished e message_end."
+  llm: "A specialized Server-Sent Events tool for Dify Chatflow that monitors SSE streams and extracts answer content from specific workflow events."
+parameters:
+  - name: url
+    type: string
+    required: true
+    label:
+      en_US: "Dify Chatflow SSE URL"
+      zh_Hans: "Dify Chatflow SSE URL"
+      pt_BR: "URL do Dify Chatflow SSE"
+    human_description:
+      en_US: "Enter the complete Dify Chatflow SSE URL. Must start with http:// or https://. Example: https://api.dify.ai/v1/chat-messages. Make sure the endpoint supports Server-Sent Events for Dify Chatflow."
+      zh_Hans: "输入完整的Dify Chatflow SSE URL。必须以http://或https://开头。示例：https://api.dify.ai/v1/chat-messages。确保端点支持Dify Chatflow的服务器发送事件。"
+      pt_BR: "Digite a URL completa do Dify Chatflow SSE. Deve começar com http:// ou https://. Exemplo: https://api.dify.ai/v1/chat-messages. Certifique-se de que o endpoint suporte Server-Sent Events para Dify Chatflow."
+    llm_description: "The complete URL of the Dify Chatflow SSE endpoint, must start with http:// or https://"
+    form: llm
+
+  - name: method
+    type: select
+    required: false
+    default: "POST"
+    label:
+      en_US: "HTTP Method"
+      zh_Hans: "HTTP 方法"
+      pt_BR: "Método HTTP"
+    human_description:
+      en_US: "Choose the HTTP method for your Dify Chatflow request. POST: most common for Dify Chatflow API. GET: for simple requests without body data. PUT/PATCH: for updating resources. DELETE: for deletion operations."
+      zh_Hans: "选择Dify Chatflow请求的HTTP方法。POST：Dify Chatflow API最常用的方法。GET：用于不需要发送数据的简单请求。PUT/PATCH：用于更新资源。DELETE：用于删除操作。"
+      pt_BR: "Escolha o método HTTP para sua solicitação Dify Chatflow. POST: mais comum para API Dify Chatflow. GET: para solicitações simples sem dados do corpo. PUT/PATCH: para atualizar recursos. DELETE: para operações de exclusão."
+    llm_description: "HTTP method for the Dify Chatflow SSE request"
+    form: form
+    options:
+      - value: "POST"
+        label:
+          en_US: "POST"
+          zh_Hans: "POST"
+          pt_BR: "POST"
+      - value: "GET"
+        label:
+          en_US: "GET"
+          zh_Hans: "GET"
+          pt_BR: "GET"
+      - value: "PUT"
+        label:
+          en_US: "PUT"
+          zh_Hans: "PUT"
+          pt_BR: "PUT"
+      - value: "PATCH"
+        label:
+          en_US: "PATCH"
+          zh_Hans: "PATCH"
+          pt_BR: "PATCH"
+      - value: "DELETE"
+        label:
+          en_US: "DELETE"
+          zh_Hans: "DELETE"
+          pt_BR: "DELETE"
+
+  - name: headers
+    type: string
+    required: false
+    default: '{"Content-Type": "application/json", "Accept": "text/event-stream", "Authorization": "Bearer YOUR_API_KEY"}'
+    label:
+      en_US: "Request Headers"
+      zh_Hans: "请求头"
+      pt_BR: "Cabeçalhos da Requisição"
+    human_description:
+      en_US: "Enter HTTP headers as a JSON object. For Dify Chatflow, typically include Authorization header. Example: {\"Authorization\": \"Bearer your-api-key\", \"Content-Type\": \"application/json\"}. The Accept and Content-Type headers for SSE are automatically set."
+      zh_Hans: "以JSON对象格式输入HTTP请求头。对于Dify Chatflow，通常需要包含Authorization头。示例：{\"Authorization\": \"Bearer your-api-key\", \"Content-Type\": \"application/json\"}。SSE的Accept和Content-Type头会自动设置。"
+      pt_BR: "Digite os cabeçalhos HTTP como um objeto JSON. Para Dify Chatflow, normalmente inclua o cabeçalho Authorization. Exemplo: {\"Authorization\": \"Bearer your-api-key\", \"Content-Type\": \"application/json\"}. Os cabeçalhos Accept e Content-Type para SSE são definidos automaticamente."
+    llm_description: "HTTP headers in JSON format, typically including Authorization for Dify API access"
+    form: llm
+
+  - name: query_params
+    type: string
+    required: false
+    default: '{}'
+    label:
+      en_US: "Query Parameters"
+      zh_Hans: "查询参数"
+      pt_BR: "Parâmetros de Consulta"
+    human_description:
+      en_US: "Enter URL query parameters as a JSON object. Example: {\"user\": \"user-123\", \"stream\": \"true\"}. These will be appended to the URL as query string parameters."
+      zh_Hans: "以JSON对象格式输入URL查询参数。示例：{\"user\": \"user-123\", \"stream\": \"true\"}。这些参数会被添加到URL后面作为查询字符串参数。"
+      pt_BR: "Digite os parâmetros de consulta da URL como um objeto JSON. Exemplo: {\"user\": \"user-123\", \"stream\": \"true\"}. Estes serão anexados à URL como parâmetros de string de consulta."
+    llm_description: "URL query parameters in JSON format for Dify Chatflow API"
+    form: llm
+
+  - name: body_type
+    type: select
+    required: false
+    default: "json"
+    label:
+      en_US: "Request Body Type"
+      zh_Hans: "请求体类型"
+      pt_BR: "Tipo do Corpo da Requisição"
+    human_description:
+      en_US: "Select the format of your request body. JSON: for Dify Chatflow API (recommended). Text: for plain text content. Form: for form-encoded data. XML: for XML documents."
+      zh_Hans: "选择请求体的格式。JSON：用于Dify Chatflow API（推荐）。Text：用于纯文本内容。Form：用于表单编码数据。XML：用于XML文档。"
+      pt_BR: "Selecione o formato do corpo da sua solicitação. JSON: para API Dify Chatflow (recomendado). Text: para conteúdo de texto simples. Form: para dados codificados em formulário. XML: para documentos XML."
+    llm_description: "Type of request body content for Dify Chatflow API"
+    form: form
+    options:
+      - value: "json"
+        label:
+          en_US: "JSON"
+          zh_Hans: "JSON"
+          pt_BR: "JSON"
+      - value: "text"
+        label:
+          en_US: "text"
+          zh_Hans: "text"
+          pt_BR: "text"
+      - value: "form"
+        label:
+          en_US: "form"
+          zh_Hans: "form"
+          pt_BR: "form"
+      - value: "xml"
+        label:
+          en_US: "xml"
+          zh_Hans: "xml"
+          pt_BR: "xml"
+
+  - name: body
+    type: string
+    required: false
+    default: '{"inputs": {}, "query": "你好", "response_mode": "streaming", "conversation_id": "", "user": "user-123"}'
+    label:
+      en_US: "Request Body"
+      zh_Hans: "请求体"
+      pt_BR: "Corpo da Requisição"
+    human_description:
+      en_US: "Enter the request body for Dify Chatflow API. JSON example: {\"inputs\": {}, \"query\": \"Hello\", \"response_mode\": \"streaming\", \"conversation_id\": \"\", \"user\": \"user-123\"}. Make sure to set response_mode to \"streaming\" for SSE support."
+      zh_Hans: "输入Dify Chatflow API的请求体。JSON示例：{\"inputs\": {}, \"query\": \"你好\", \"response_mode\": \"streaming\", \"conversation_id\": \"\", \"user\": \"user-123\"}。确保将response_mode设置为\"streaming\"以支持SSE。"
+      pt_BR: "Digite o corpo da solicitação para a API Dify Chatflow. Exemplo JSON: {\"inputs\": {}, \"query\": \"Olá\", \"response_mode\": \"streaming\", \"conversation_id\": \"\", \"user\": \"user-123\"}. Certifique-se de definir response_mode como \"streaming\" para suporte SSE."
+    llm_description: "Request body content for Dify Chatflow API, typically JSON with query and streaming mode"
+    form: llm
+
+  - name: timeout
+    type: number
+    required: false
+    default: 300
+    label:
+      en_US: "Connection Timeout (seconds)"
+      zh_Hans: "连接超时时间（秒）"
+      pt_BR: "Timeout de Conexão (segundos)"
+    human_description:
+      en_US: "Set the connection timeout in seconds. Recommended: 60s for Dify Chatflow (default), 120s+ for complex workflows. If the server doesn't respond within this time, the connection will fail."
+      zh_Hans: "设置连接超时时间（秒）。建议：Dify Chatflow用60秒（默认），复杂工作流用120秒以上。如果服务器在此时间内未响应，连接将失败。"
+      pt_BR: "Defina o tempo limite de conexão em segundos. Recomendado: 60s para Dify Chatflow (padrão), 120s+ para fluxos de trabalho complexos. Se o servidor não responder dentro deste tempo, a conexão falhará."
+    llm_description: "Connection timeout in seconds for Dify Chatflow API"
+    form: form
+
+  - name: max_events
+    type: number
+    required: false
+    default: 10000
+    label:
+      en_US: "Maximum Events"
+      zh_Hans: "最大事件数"
+      pt_BR: "Máximo de Eventos"
+    human_description:
+      en_US: "Limit the number of events to collect. Recommended: 200 for Dify Chatflow (default), 500+ for long conversations. The connection will close after reaching this limit to prevent memory overflow."
+      zh_Hans: "限制收集的事件数量。建议：Dify Chatflow用200个（默认），长对话用500+个。达到此限制后连接会关闭，以防止内存溢出。"
+      pt_BR: "Limite o número de eventos a coletar. Recomendado: 200 para Dify Chatflow (padrão), 500+ para conversas longas. A conexão será fechada após atingir este limite para evitar estouro de memória."
+    llm_description: "Maximum number of events to collect from Dify Chatflow"
+    form: form
+
+  - name: max_duration
+    type: number
+    required: false
+    default: 600
+    label:
+      en_US: "Maximum Duration (seconds)"
+      zh_Hans: "最大持续时间（秒）"
+      pt_BR: "Duração Máxima (segundos)"
+    human_description:
+      en_US: "Maximum duration to keep listening for events (in seconds). Recommended: 600s (10min) for Dify Chatflow (default), 1800s (30min) for complex workflows. The connection will automatically close after this time."
+      zh_Hans: "保持监听事件的最大持续时间（秒）。建议：Dify Chatflow用600秒（10分钟，默认），复杂工作流用1800秒（30分钟）。超过此时间连接会自动关闭。"
+      pt_BR: "Duração máxima para manter a escuta de eventos (em segundos). Recomendado: 600s (10min) para Dify Chatflow (padrão), 1800s (30min) para fluxos de trabalho complexos. A conexão será fechada automaticamente após este tempo."
+    llm_description: "Maximum duration to keep the Dify Chatflow connection alive in seconds"
+    form: form
+
+# 输出变量定义 - 工作流中可引用的所有输出变量
+output_schema:
+  type: object
+  properties:
+    chatflow_answer:
+      type: string
+      description: "Extracted answer content from Dify Chatflow workflow_finished event"
+    events_stream:
+      type: array
+      description: "Stream of key SSE events (workflow_finished and message_end) for workflow processing"
+      items:
+        type: object
+        properties:
+          event_number:
+            type: number
+            description: "Sequential event number"
+          event_type:
+            type: string
+            description: "SSE event type"
+          data:
+            description: "SSE event data (can be string or parsed object)"
+          event_id:
+            type: string
+            description: "SSE event ID"
+          timestamp:
+            type: string
+            description: "Event timestamp"
+          retry:
+            type: number
+            description: "SSE retry value"
+    connection_status:
+      type: string
+      description: "Simple connection status (completed, failed, error)"
+    total_events:
+      type: number
+      description: "Total number of key events received (workflow_finished and message_end)"
+    connection_duration:
+      type: number
+      description: "Connection duration in seconds"
+    error:
+      type: string
+      description: "Error message if connection failed"
+
+extra:
+  python:
+    source: tools/dify_chatflow_sse.py
