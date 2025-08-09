@@ -16,8 +16,11 @@ from dify_plugin.config.logger_format import plugin_logger_handler
 
 # 使用自定义处理器设置日志
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.INFO)  # 设置为DEBUG以确保所有级别的日志都能被处理
 logger.addHandler(plugin_logger_handler)
+
+# 确保plugin_logger_handler初始设置为DEBUG级别，后续会动态调整
+plugin_logger_handler.setLevel(logging.INFO)
 
 class SSEEvent:
     """SSE事件数据结构"""

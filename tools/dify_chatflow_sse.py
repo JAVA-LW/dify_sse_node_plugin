@@ -15,8 +15,11 @@ from dify_plugin.config.logger_format import plugin_logger_handler
 
 # 使用自定义处理器设置日志
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO) 
 logger.addHandler(plugin_logger_handler)
+
+plugin_logger_handler.setLevel(logging.INFO )
+
 
 
 class SSEEvent:
@@ -603,6 +606,54 @@ class DifyChatflowSSETool(Tool):
     def _invoke(self, tool_parameters: dict[str, Any]) -> Generator[ToolInvokeMessage, None, None]:
         """执行SSE请求"""
         try:
+            # 动态设置日志级别 - 从provider配置中获取log_level
+            try:
+                if hasattr(self, 'runtime') and self.runtime and hasattr(self.runtime, 'credentials'):
+                    # 调试：输出完整的credentials信息
+                    logger.info(f"[日志配置] 获取到的credentials: {self.runtime.credentials}")
+                    
+                    log_level_str = self.runtime.credentials.get('log_level', 'INFO')
+                    logger.info(f"[日志配置] 从credentials获取的log_level: {log_level_str}")
+                    
+                    # 将字符串转换为logging级别
+                    log_level_mapping = {
+                        'DEBUG': logging.DEBUG,
+                        'INFO': logging.INFO,
+                        'WARNING': logging.WARNING,
+                        'ERROR': logging.ERROR
+                    }
+                    log_level = log_level_mapping.get(log_level_str.upper(), logging.INFO)
+                    
+                    # 动态设置logger的级别
+                    logger.setLevel(log_level)
+                    
+                    # 重要：确保plugin_logger_handler也应用相同的日志级别
+                    for handler in logger.handlers:
+                        if hasattr(handler, 'setLevel'):
+                            handler.setLevel(log_level)
+                            # 特别处理plugin_logger_handler
+                            if hasattr(handler, '__class__') and 'plugin' in str(handler.__class__).lower():
+                                logger.info(f"[日志配置] 为plugin_logger_handler设置级别: {log_level_str}")
+                    
+                    # 同时设置根logger的级别，确保所有日志都能被处理
+                    root_logger = logging.getLogger()
+                    if root_logger.level > log_level:
+                        root_logger.setLevel(log_level)
+                    
+                    logger.info(f"[日志配置] 动态设置日志级别为: {log_level_str} ({log_level})")
+                    
+                    # 测试不同级别的日志输出
+                    if log_level_str.upper() == 'DEBUG':
+                        logger.debug("[日志测试] DEBUG级别日志测试")
+                        logger.info("[日志测试] INFO级别日志测试")
+                        logger.warning("[日志测试] WARNING级别日志测试")
+                        logger.error("[日志测试] ERROR级别日志测试")
+                else:
+                    logger.info("[日志配置] 无法获取provider配置，使用默认INFO级别")
+            except Exception as e:
+                logger.error(f"[日志配置] 设置日志级别时出错: {e}，使用默认INFO级别")
+                logger.setLevel(logging.INFO)
+            
             # 控制台日志：输出入参
             logger.debug("=" * 80)
             logger.info("[工具调用] DifyChatflowSSETool._invoke 开始执行")

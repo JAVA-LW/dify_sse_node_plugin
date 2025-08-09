@@ -1,15 +1,12 @@
 import logging
 from dify_plugin import Plugin, DifyPluginEnv
 
-# 配置日志级别为DEBUG，显示详细调试信息
+# 日志级别现在通过插件配置管理，在provider中设置
+# 默认设置一个基础的日志配置，会被provider覆盖
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-
-# 如果你只想看到特定模块的DEBUG日志，可以使用以下配置：
-# logging.basicConfig(level=logging.INFO)  # 全局设置为INFO
-# logging.getLogger('tools.dify_chatflow_sse').setLevel(logging.DEBUG)  # 只对SSE工具启用DEBUG
 
 plugin = Plugin(DifyPluginEnv(MAX_REQUEST_TIMEOUT=120))
 

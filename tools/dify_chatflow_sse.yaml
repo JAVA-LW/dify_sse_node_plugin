@@ -156,7 +156,7 @@ parameters:
   - name: timeout
     type: number
     required: false
-    default: 120
+    default: 300
     label:
       en_US: "Connection Timeout (seconds)"
       zh_Hans: "连接超时时间（秒）"
@@ -202,21 +202,9 @@ parameters:
 output_schema:
   type: object
   properties:
-    status:
+    chatflow_answer:
       type: string
-      description: "Connection status (completed, failed, error)"
-    total_events:
-      type: number
-      description: "Total number of key events received (workflow_finished and message_end)"
-    connection_duration:
-      type: number
-      description: "Connection duration in seconds"
-    summary:
-      type: string
-      description: "Human readable summary of the Dify Chatflow SSE session"
-    error:
-      type: string
-      description: "Error message if connection failed"
+      description: "Extracted answer content from Dify Chatflow workflow_finished event"
     events_stream:
       type: array
       description: "Stream of key SSE events (workflow_finished and message_end) for workflow processing"
@@ -243,9 +231,18 @@ output_schema:
     connection_status:
       type: string
       description: "Simple connection status (completed, failed, error)"
-    chatflow_answer:
+    total_events:
+      type: number
+      description: "Total number of key events received (workflow_finished and message_end)"
+    connection_duration:
+      type: number
+      description: "Connection duration in seconds"
+    summary:
       type: string
-      description: "Extracted answer content from Dify Chatflow workflow_finished event"
+      description: "Human readable summary of the Dify Chatflow SSE session"
+    error:
+      type: string
+      description: "Error message if connection failed"
 
 extra:
   python:
