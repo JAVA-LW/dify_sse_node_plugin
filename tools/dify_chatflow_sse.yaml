@@ -20,14 +20,15 @@ parameters:
   - name: url
     type: string
     required: true
+    default: "http://api:5001/v1/chat-messages"
     label:
       en_US: "Dify Chatflow SSE URL"
       zh_Hans: "Dify Chatflow SSE URL"
       pt_BR: "URL do Dify Chatflow SSE"
     human_description:
-      en_US: "Enter the complete Dify Chatflow SSE URL. Must start with http:// or https://. Example: https://api.dify.ai/v1/chat-messages. Make sure the endpoint supports Server-Sent Events for Dify Chatflow."
-      zh_Hans: "输入完整的Dify Chatflow SSE URL。必须以http://或https://开头。示例：https://api.dify.ai/v1/chat-messages。确保端点支持Dify Chatflow的服务器发送事件。"
-      pt_BR: "Digite a URL completa do Dify Chatflow SSE. Deve começar com http:// ou https://. Exemplo: https://api.dify.ai/v1/chat-messages. Certifique-se de que o endpoint suporte Server-Sent Events para Dify Chatflow."
+      en_US: "Enter the complete Dify Chatflow SSE URL. Must start with http:// or https://. Example: http://api:5001/v1/chat-messages. Make sure the endpoint supports Server-Sent Events for Dify Chatflow."
+      zh_Hans: "输入完整的Dify Chatflow SSE URL。必须以http://或https://开头。示例：http://api:5001/v1/chat-messages。确保端点支持Dify Chatflow的服务器发送事件。"
+      pt_BR: "Digite a URL completa do Dify Chatflow SSE. Deve começar com http:// ou https://. Exemplo: http://api:5001/v1/chat-messages. Certifique-se de que o endpoint suporte Server-Sent Events para Dify Chatflow."
     llm_description: "The complete URL of the Dify Chatflow SSE endpoint, must start with http:// or https://"
     form: llm
 
