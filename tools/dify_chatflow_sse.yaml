@@ -237,9 +237,6 @@ output_schema:
     connection_duration:
       type: number
       description: "Connection duration in seconds"
-    summary:
-      type: string
-      description: "Human readable summary of the Dify Chatflow SSE session"
     error:
       type: string
       description: "Error message if connection failed"

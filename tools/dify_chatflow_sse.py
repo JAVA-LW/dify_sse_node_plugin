@@ -763,29 +763,28 @@ class DifyChatflowSSETool(Tool):
                     final_result = {
                         "status": "completed",
                         "total_events": event_count,
-                        "key_events_count": len(key_events),
                         "connection_duration": round(duration, 2),
                         "chatflow_answer": chatflow_answer,
                         "summary": f"Chatflow SSE连接成功，接收到{event_count}个事件（{len(key_events)}个关键事件），耗时{duration:.2f}秒"
                     }
                     
-                    # 构建文本摘要
-                    text_summary = f"[最终结果] 构建完成，包含{len(all_events)}个事件，{len(key_events)}个关键事件"
+                    # 构建文本摘要 - 使用chatflow_answer作为文本输出
+                    text_summary = chatflow_answer if chatflow_answer else f"[最终结果] 构建完成，包含{len(all_events)}个事件，{len(key_events)}个关键事件"
                     
                     logger.debug(f"[最终结果] 构建完成，包含{len(all_events)}个事件，{len(key_events)}个关键事件")
                     
                     # 返回JSON结果
                     yield self.create_json_message(final_result)
                     
-                    # 返回文本摘要
+                    # 返回文本摘要 - 现在使用chatflow_answer的内容
                     yield self.create_text_message(text_summary)
                     
                     # 返回自定义变量 - 事件流数组（如果没有关键事件则返回全部事件，否则返回关键事件）
                     events_to_stream = key_events if len(key_events) > 0 else all_events
                     yield self.create_variable_message("events_stream", events_to_stream)
                     
-                    # 返回自定义变量 - 关键事件流数组（Chatflow专用）
-                    yield self.create_variable_message("key_events", key_events)
+                    # 移除key_events变量输出 - 根据用户要求，这个变量是多余的
+                    # yield self.create_variable_message("key_events", key_events)
                     
                     # 返回自定义变量 - Chatflow答案（Chatflow专用）
                     yield self.create_variable_message("chatflow_answer", chatflow_answer)
@@ -796,8 +795,8 @@ class DifyChatflowSSETool(Tool):
                     # 返回自定义变量 - 事件总数
                     yield self.create_variable_message("total_events", event_count)
                     
-                    # 返回自定义变量 - 关键事件总数
-                    yield self.create_variable_message("key_events_count", len(key_events))
+                    # 移除key_events_count变量输出 - 因为key_events已经被移除，这个计数也不需要了
+                    # yield self.create_variable_message("key_events_count", len(key_events))
                     
                     # 返回自定义变量 - 连接时长
                     yield self.create_variable_message("connection_duration", round(duration, 2))
