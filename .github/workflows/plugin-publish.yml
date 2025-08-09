@@ -83,35 +83,33 @@ jobs:
           echo "\\nDirectory structure:"
           tree || ls -R
 
-      - name: Commit package to source repo
+      - name: Create GitHub Release
         env:
-          GITHUB_TOKEN: ${{ secrets.PLUGIN_ACTION }}
+          GH_TOKEN: ${{ secrets.PLUGIN_ACTION }}
         run: |
-          # Create releases directory if it doesn't exist
-          mkdir -p releases
-          
-          # Copy the package file to releases directory
           PACKAGE_NAME="${{ steps.get_basic_info.outputs.plugin_name }}-${{ steps.get_basic_info.outputs.version }}.difypkg"
-          cp "$PACKAGE_NAME" releases/
+          VERSION="${{ steps.get_basic_info.outputs.version }}"
+          PLUGIN_NAME="${{ steps.get_basic_info.outputs.plugin_name }}"
           
-          # Configure git with token authentication
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
+          # Create release with the packaged file
+          gh release create "v$VERSION" \
+            --repo ${{ github.repository }} \
+            --title "$PLUGIN_NAME v$VERSION" \
+            --notes "Release $PLUGIN_NAME plugin version $VERSION
+
+          ## Changes
+          - Updated plugin package to version $VERSION
+          - Ready for deployment to Dify Marketplace
+
+          ## Installation
+          Download the \`.difypkg\` file and install it in your Dify instance.
+
+          ## Files
+          - \`$PACKAGE_NAME\` - Plugin package file" \
+            --latest \
+            "$PACKAGE_NAME"
           
-          # Set up remote URL with token for authentication
-          git remote set-url origin https://x-access-token:${{ secrets.PLUGIN_ACTION }}@github.com/${{ github.repository }}.git
-          
-          # Add and commit the package file
-          git add releases/"$PACKAGE_NAME"
-          
-          # Check if there are changes to commit
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "add plugin package ${{ steps.get_basic_info.outputs.plugin_name }} v${{ steps.get_basic_info.outputs.version }}"
-            git push origin main
-            echo "Package committed to source repository"
-          fi
+          echo "Release v$VERSION created successfully with package file"
 
       - name: Checkout target repo
         uses: actions/checkout@v4
