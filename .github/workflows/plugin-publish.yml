@@ -48,8 +48,8 @@ jobs:
           echo "Plugin author: $AUTHOR"
           echo "author=$AUTHOR" >> $GITHUB_OUTPUT
 
-          # GitHub username for repository operations (auto-detect from current repo)
-          GITHUB_USER="${{ github.repository_owner }}"
+          # GitHub organization for repository operations
+          GITHUB_USER="tdcktz"
           echo "GitHub user: $GITHUB_USER"
           echo "github_user=$GITHUB_USER" >> $GITHUB_OUTPUT
 
