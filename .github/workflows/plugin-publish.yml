@@ -132,25 +132,28 @@ jobs:
           echo "Debug: Package name: $PACKAGE_NAME"
           ls -la
 
-          # Move the packaged file to the target directory using variables
-          mkdir -p dify-plugins/${{ steps.get_basic_info.outputs.org_name }}/${{ steps.get_basic_info.outputs.plugin_name }}
-          mv "$PACKAGE_NAME" dify-plugins/${{ steps.get_basic_info.outputs.org_name }}/${{ steps.get_basic_info.outputs.plugin_name }}/
-
-          # Enter the target repository directory
+          # Enter the target repository directory first
           cd dify-plugins
 
           # Configure git
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-          # Ensure we are on the latest main branch
+          # Ensure we are on the latest main branch and clean working directory
           git fetch origin main
           git checkout main
           git pull origin main
+          
+          # Clean any untracked files that might conflict
+          git clean -fd
 
           # Create and switch to a new branch using variables and new naming convention
           BRANCH_NAME="bump-${{ steps.get_basic_info.outputs.plugin_name }}-plugin-${{ steps.get_basic_info.outputs.version }}"
           git checkout -b "$BRANCH_NAME"
+
+          # Now move the packaged file to the target directory using variables
+          mkdir -p ${{ steps.get_basic_info.outputs.org_name }}/${{ steps.get_basic_info.outputs.plugin_name }}
+          mv "../$PACKAGE_NAME" ${{ steps.get_basic_info.outputs.org_name }}/${{ steps.get_basic_info.outputs.plugin_name }}/
 
           # Add and commit changes (using git add .)
           git add .
