@@ -79,6 +79,31 @@ jobs:
           echo "\\nDirectory structure:"
           tree || ls -R
 
+      - name: Commit package to source repo
+        run: |
+          # Create releases directory if it doesn't exist
+          mkdir -p releases
+          
+          # Copy the package file to releases directory
+          PACKAGE_NAME="${{ steps.get_basic_info.outputs.plugin_name }}-${{ steps.get_basic_info.outputs.version }}.difypkg"
+          cp "$PACKAGE_NAME" releases/
+          
+          # Configure git
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          # Add and commit the package file
+          git add releases/"$PACKAGE_NAME"
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "add plugin package ${{ steps.get_basic_info.outputs.plugin_name }} v${{ steps.get_basic_info.outputs.version }}"
+            git push origin main
+            echo "Package committed to source repository"
+          fi
+
       - name: Checkout target repo
         uses: actions/checkout@v4
         with:
