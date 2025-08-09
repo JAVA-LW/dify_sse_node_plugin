@@ -1,14 +1,14 @@
 identity:
-  author: "lw"
-  name: "dify_sse_node_plugin"
+  author: "tdcktz"
+  name: "sse_request_tool"
   label:
-    en_US: "dify_sse_node_plugin"
-    zh_Hans: "dify_sse_node_plugin"
-    pt_BR: "dify_sse_node_plugin"
+    en_US: "sse_request_tool"
+    zh_Hans: "sse请求工具"
+    pt_BR: "sse_request_tool"
   description:
     en_US: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
-    zh_Hans: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
-    pt_BR: "Send an SSE request in the workflow node of Dify. The SSE node will support the establishment of a long connection, receive real-time data streams pushed by the server, and output the complete result after the communication ends."
+    zh_Hans: "在Dify的工作流节点中发送SSE请求。SSE节点将支持建立长连接，接收服务器推送的实时数据流，并在通信结束后输出完整结果。"
+    pt_BR: "Envie uma solicitação SSE no nó de fluxo de trabalho do Dify. O nó SSE suportará o estabelecimento de uma conexão longa, receberá fluxos de dados em tempo real enviados pelo servidor e produzirá o resultado completo após o término da comunicação."
   icon: "icon.svg"
 
 #########################################################################################

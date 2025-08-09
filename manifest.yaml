@@ -1,7 +1,7 @@
 version: 0.0.1
 type: plugin
-author: lw
-name: dify_sse_node_plugin
+author: tdcktz
+name: sse_request_tool
 label:
   en_US: SSE Request Tool
   ja_JP: SSEリクエストツール
