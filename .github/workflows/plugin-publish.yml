@@ -1,16 +1,16 @@
-# .github/workflows/auto-pr.yml
-name: Auto Create PR on Main Push
+# .github/workflows/plugin-publish.yml
+name: Plugin Auto-PR
 
 on:
   push:
     branches: [ main ]  # Trigger on push to main
 
 jobs:
-  create_pr: # Renamed job for clarity
+  auto_pr:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Print working directory # Kept for debugging
         run: |
@@ -32,7 +32,7 @@ jobs:
           pwd
           ls -la dify-plugin-linux-amd64
 
-      - name: Get basic info from manifest # Changed step name and content
+      - name: Get basic info from manifest
         id: get_basic_info
         run: |
           PLUGIN_NAME=$(grep "^name:" manifest.yaml | cut -d' ' -f2)
@@ -43,10 +43,15 @@ jobs:
           echo "Plugin version: $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-          # If the author's name is not your github username, you can change the author here
+          # Get author from manifest.yaml (for plugin metadata)
           AUTHOR=$(grep "^author:" manifest.yaml | cut -d' ' -f2)
           echo "Plugin author: $AUTHOR"
           echo "author=$AUTHOR" >> $GITHUB_OUTPUT
+
+          # GitHub username for repository operations (auto-detect from current repo)
+          GITHUB_USER="${{ github.repository_owner }}"
+          echo "GitHub user: $GITHUB_USER"
+          echo "github_user=$GITHUB_USER" >> $GITHUB_OUTPUT
 
       - name: Package Plugin
         id: package
@@ -70,14 +75,14 @@ jobs:
           tree || ls -R
 
       - name: Checkout target repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          # Use author variable for repository
-          repository: ${{steps.get_basic_info.outputs.author}}/dify-plugins
+          # Use GitHub username for repository
+          repository: ${{steps.get_basic_info.outputs.github_user}}/dify-plugins
           path: dify-plugins
           token: ${{ secrets.PLUGIN_ACTION }}
-          fetch-depth: 1 # Fetch only the last commit to speed up checkout
-          persist-credentials: true # Persist credentials for subsequent git operations
+          fetch-depth: 1
+          persist-credentials: true
 
       - name: Prepare and create PR
         run: |
@@ -89,8 +94,8 @@ jobs:
           ls -la
 
           # Move the packaged file to the target directory using variables
-          mkdir -p dify-plugins/${{ steps.get_basic_info.outputs.author }}/${{ steps.get_basic_info.outputs.plugin_name }}
-          mv "$PACKAGE_NAME" dify-plugins/${{ steps.get_basic_info.outputs.author }}/${{ steps.get_basic_info.outputs.plugin_name }}/
+          mkdir -p dify-plugins/${{ steps.get_basic_info.outputs.github_user }}/${{ steps.get_basic_info.outputs.plugin_name }}
+          mv "$PACKAGE_NAME" dify-plugins/${{ steps.get_basic_info.outputs.github_user }}/${{ steps.get_basic_info.outputs.plugin_name }}/
 
           # Enter the target repository directory
           cd dify-plugins
@@ -128,7 +133,7 @@ jobs:
         run: |
           gh pr create \
             --repo langgenius/dify-plugins \
-            --head "${{ steps.get_basic_info.outputs.author }}:${{ steps.get_basic_info.outputs.plugin_name }}-${{ steps.get_basic_info.outputs.version }}" \
+            --head "${{ steps.get_basic_info.outputs.github_user }}:bump-${{ steps.get_basic_info.outputs.plugin_name }}-plugin-${{ steps.get_basic_info.outputs.version }}" \
             --base main \
             --title "bump ${{ steps.get_basic_info.outputs.plugin_name }} plugin to version ${{ steps.get_basic_info.outputs.version }}" \
             --body "bump ${{ steps.get_basic_info.outputs.plugin_name }} plugin package to version ${{ steps.get_basic_info.outputs.version }}
