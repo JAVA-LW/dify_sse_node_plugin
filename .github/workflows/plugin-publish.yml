@@ -8,6 +8,10 @@ on:
 jobs:
   auto_pr:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -80,6 +84,8 @@ jobs:
           tree || ls -R
 
       - name: Commit package to source repo
+        env:
+          GITHUB_TOKEN: ${{ secrets.PLUGIN_ACTION }}
         run: |
           # Create releases directory if it doesn't exist
           mkdir -p releases
@@ -88,9 +94,12 @@ jobs:
           PACKAGE_NAME="${{ steps.get_basic_info.outputs.plugin_name }}-${{ steps.get_basic_info.outputs.version }}.difypkg"
           cp "$PACKAGE_NAME" releases/
           
-          # Configure git
+          # Configure git with token authentication
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          
+          # Set up remote URL with token for authentication
+          git remote set-url origin https://x-access-token:${{ secrets.PLUGIN_ACTION }}@github.com/${{ github.repository }}.git
           
           # Add and commit the package file
           git add releases/"$PACKAGE_NAME"
