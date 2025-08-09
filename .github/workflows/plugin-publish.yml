@@ -48,10 +48,15 @@ jobs:
           echo "Plugin author: $AUTHOR"
           echo "author=$AUTHOR" >> $GITHUB_OUTPUT
 
-          # GitHub organization for repository operations
-          GITHUB_USER="tdcktz"
+          # GitHub username for repository operations
+          GITHUB_USER="JAVA-LW"
           echo "GitHub user: $GITHUB_USER"
           echo "github_user=$GITHUB_USER" >> $GITHUB_OUTPUT
+          
+          # Organization name for plugin directory
+          ORG_NAME="tdcktz"
+          echo "Organization name: $ORG_NAME"
+          echo "org_name=$ORG_NAME" >> $GITHUB_OUTPUT
 
       - name: Package Plugin
         id: package
@@ -94,8 +99,8 @@ jobs:
           ls -la
 
           # Move the packaged file to the target directory using variables
-          mkdir -p dify-plugins/${{ steps.get_basic_info.outputs.github_user }}/${{ steps.get_basic_info.outputs.plugin_name }}
-          mv "$PACKAGE_NAME" dify-plugins/${{ steps.get_basic_info.outputs.github_user }}/${{ steps.get_basic_info.outputs.plugin_name }}/
+          mkdir -p dify-plugins/${{ steps.get_basic_info.outputs.org_name }}/${{ steps.get_basic_info.outputs.plugin_name }}
+          mv "$PACKAGE_NAME" dify-plugins/${{ steps.get_basic_info.outputs.org_name }}/${{ steps.get_basic_info.outputs.plugin_name }}/
 
           # Enter the target repository directory
           cd dify-plugins
