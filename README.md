@@ -1,7 +1,7 @@
 # Dify SSE 请求工具插件
 
 **Author:** lw  
-**Version:** 0.0.1  
+**Version:** 0.0.3  
 **Type:** tool
 
 ## 📖 描述
@@ -144,14 +144,6 @@ URL: https://your-log-server.com/logs/stream
 最大持续时间: 600
 ```
 
-## 🧪 测试
-
-运行测试示例：
-
-```bash
-cd examples
-python test_sse.py
-```
 
 ## 🤝 贡献
 
