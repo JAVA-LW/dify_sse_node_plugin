@@ -249,6 +249,35 @@ class DifyChatflowSSEClient:
                             # 第一步：清理JSON字符串中的无效字符
                             cleaned_body = self.body
                             
+                            # 清理控制字符 - 使用更简单直接的方法
+                            import re
+                            
+                            # 方法1：先尝试直接解析，如果失败再进行清理
+                            try:
+                                # 直接尝试解析原始JSON
+                                test_parsed = json_lib.loads(cleaned_body)
+                                logger.debug(f"[JSON处理] 原始JSON解析成功，无需清理")
+                            except json_lib.JSONDecodeError:
+                                logger.debug(f"[JSON处理] 原始JSON解析失败，开始清理控制字符")
+                                
+                                # 方法2：移除JSON结构中的格式化字符，保留字符串值内的内容
+                                # 先压缩所有空白字符（包括换行、制表符等）为单个空格
+                                cleaned_body = re.sub(r'\s+', ' ', cleaned_body)
+                                
+                                # 然后清理字符串值内的实际控制字符
+                                # 使用简单的字符串替换来处理常见的控制字符
+                                cleaned_body = cleaned_body.replace('\n', ' ')  # 换行符替换为空格
+                                cleaned_body = cleaned_body.replace('\r', ' ')  # 回车符替换为空格
+                                cleaned_body = cleaned_body.replace('\t', ' ')  # 制表符替换为空格
+                                cleaned_body = cleaned_body.replace('\b', ' ')  # 退格符替换为空格
+                                cleaned_body = cleaned_body.replace('\f', ' ')  # 换页符替换为空格
+                                
+                                # 清理多余的空格
+                                cleaned_body = re.sub(r'\s+', ' ', cleaned_body)
+                                cleaned_body = cleaned_body.strip()
+                                
+                                logger.debug(f"[JSON处理] 控制字符清理完成")
+                            
                             # 清理不间断空格(\xa0)和其他常见的无效字符
                             cleaned_body = cleaned_body.replace('\xa0', ' ')  # 不间断空格替换为普通空格
                             cleaned_body = cleaned_body.replace('\u00a0', ' ')  # Unicode不间断空格
